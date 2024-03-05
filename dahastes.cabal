@@ -35,6 +35,21 @@ library
   build-depends:
     , containers
     , mtl
+    , extra
+    , turtle
+    , doctest
+    , regex-base
+    , regex-tdfa
+    -- , zeromq4-haskell
+    , tasty-hunit
+    , text
+    , split
+    , directory
+    , filemanip
+    , foldl
+    , mtl
+    , htaglib
+    , system-filepath
 
 executable dahastes-exe
   import:         common-options
