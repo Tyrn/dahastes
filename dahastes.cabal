@@ -1,0 +1,68 @@
+cabal-version:   2.4
+name:            dahastes
+version:         0
+license:         BSD-3-Clause
+build-type:      Simple
+license-file:    LICENSE
+author:          Tyrn
+maintainer:      Tyrn <a@b.com>
+copyright:       2024 Tyrn
+tested-with:     GHC ==8.6.5 || ==8.8.3 || ==8.10.7 || ==9.0.2 || ==9.2.2
+extra-doc-files:
+  CHANGELOG.md
+  README.md
+
+-- category:
+-- description:     description
+-- synopsis:        one-line synopsis
+-- homepage:        https://github.com/FIXME/dahastes#readme
+-- source-repository head
+--   type:     git
+--   location: git://github.com/FIXME/dahastes.git
+
+common common-options
+  build-depends:    base >=4.9 && <5
+  default-language: Haskell2010
+  ghc-options:
+    -Wall -Wcompat -Widentities -Wincomplete-uni-patterns
+    -Wincomplete-record-updates -Wredundant-constraints
+    -fhide-source-paths -Wpartial-fields
+
+library
+  import:          common-options
+  hs-source-dirs:  src
+  exposed-modules: Lib
+  build-depends:
+    , containers
+    , mtl
+
+executable dahastes-exe
+  import:         common-options
+  hs-source-dirs: app
+  main-is:        Main.hs
+  build-depends:  dahastes
+  ghc-options:    -threaded -rtsopts -with-rtsopts=-N
+
+test-suite dahastes-test
+  import:         common-options
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is:        Spec.hs
+  build-depends:
+    , hspec
+    , HUnit
+    , dahastes
+    , QuickCheck
+
+  ghc-options:    -threaded -rtsopts -with-rtsopts=-N
+
+benchmark dahastes-bench
+  import:         common-options
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: bench
+  main-is:        Main.hs
+  build-depends:
+    , criterion
+    , dahastes
+
+  ghc-options:    -threaded -rtsopts -with-rtsopts=-N

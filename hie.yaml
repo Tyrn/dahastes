@@ -1,0 +1,16 @@
+cradle:
+  multi:
+    # - path: "ignore/"
+    #   config: {cradle: {none: }}
+
+    - path: "src"
+      config: {cradle: {cabal: {component: "lib:dahastes"}}}
+
+    - path: "app"
+      config: {cradle: {cabal: {component: "dahastes:dahastes-exe"}}}
+
+    - path: "test"
+      config: {cradle: {cabal: {component: "dahastes:dahastes-test"}}}
+
+    - path: "bench"
+      config: {cradle: {cabal: {component: "dahastes:dahastes-bench"}}}
