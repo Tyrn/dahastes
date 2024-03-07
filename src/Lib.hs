@@ -113,14 +113,14 @@ makeCounter = do
 
 -- | Makes custom title tag
 shapeTitle :: Settings -> Int -> String -> String -> Text
-shapeTitle args n fileName s =
+shapeTitle args n fileName ss =
   T.pack
-    ( if (sFileTitleNum args)
-        then (printf "%d>%s" n fileName) -- Add Track Number to Title
+    ( if sFileTitleNum args
+        then printf "%d>%s" n fileName -- Add Track Number to Title
         else
-          if (sFileTitle args)
+          if sFileTitle args
             then fileName
-            else (printf "%d %s" n s)
+            else printf "%d %s" n ss
     )
 
 -- | Sets tags to the destination file.
@@ -132,8 +132,8 @@ setTagsToCopy args total trackNum file
           ( mkTitle $
               tt
                 ( (makeInitials $ T.unpack artist)
-                    ++ " - "
-                    ++ T.unpack album
+                    <> " - "
+                    <> T.unpack album
                 )
           )
           <> artistSetter (mkArtist artist)
@@ -154,12 +154,12 @@ setTagsToCopy args total trackNum file
   st = setTags (strp file) Nothing
   tt = shapeTitle args trackNum (strp $ baseName file)
   artist = fromMaybe "*" (sArtistTag args)
-  album = case (sUnifiedName args) of
+  album = case sUnifiedName args of
     Just uname -> uname
     Nothing -> fromMaybe "*" (sAlbumTag args)
   isAlbumTag = (sAlbumTag args) /= Nothing || (sUnifiedName args) /= Nothing
   track =
-    if (sDropTracknumber args)
+    if sDropTracknumber args
       then mempty
       else trackNumberSetter (mkTrackNumber trackNum)
 
@@ -185,11 +185,11 @@ baseName = dropExtension . filename
 isAudioFile :: Settings -> FilePath -> Bool
 isAudioFile args file =
   let ext = case extension file of
-        Just ext -> (map toUpper ext)
+        Just extn -> (map toUpper extn)
         Nothing -> ""
    in elem ext checkList
  where
-  checkList = case (sFileType args) of
+  checkList = case sFileType args of
     Just ftype -> [dropWhile (== '.') (T.unpack $ T.toUpper ftype)]
     Nothing -> ["MP3", "M4A", "M4B", "OGG", "WMA", "FLAC"]
 
@@ -203,7 +203,7 @@ Examples:
 "15331"
 -}
 zeroPad :: Int -> Int -> String
-zeroPad n len = printf ("%0" ++ (printf "%d" len) ++ "d") n
+zeroPad n len = printf ("%0" <> printf "%d" len <> "d") n
 
 {- | Returns a list of integer numbers embedded in a string arguments.
 
@@ -234,12 +234,12 @@ LT
 LT
 -}
 cmpstrNaturally :: String -> String -> Ordering
-cmpstrNaturally x y =
-  let nx = strStripNumbers x
+cmpstrNaturally xx y =
+  let nx = strStripNumbers xx
       ny = strStripNumbers y
    in if nx /= [] && ny /= []
         then compare nx ny
-        else compare x y
+        else compare xx y
 
 {- | Removes all double quoted substrings, if any, from a string.
 
@@ -253,7 +253,7 @@ Examples:
 removeQuotedSubstrings :: String -> String
 removeQuotedSubstrings str =
   let quoteds =
-        filter (\s -> length s > 0 && head s == '"') $
+        filter (\se -> length se > 0 && head se == '"') $
           concat (str =~ ("\"(\\.|[^\"\\])*\"" :: String) :: [[String]])
    in T.unpack $
         foldr
@@ -286,30 +286,30 @@ makeInitials :: String -> String
 makeInitials grandName =
   let parts = splitOn "-" $ removeQuotedSubstrings grandName
       splitPart = \part -> concat (part =~ ("[^ \t]+" :: String) :: [[String]])
-      inits = (\part -> intercalate "." [[head w] | w <- splitPart part]) <$> parts
-   in T.unpack $ T.toUpper $ fromString $ intercalate "-" inits ++ "."
+      initials = (\part -> intercalate "." [[head n] | n <- splitPart part]) <$> parts
+   in T.unpack $ T.toUpper $ fromString $ intercalate "-" initials <> "."
 
 {- Console output -}
 
 -- | Prints the header of the output to the console.
 putHeader :: Settings -> IO ()
 putHeader args = do
-  if (sVerbose args)
+  if sVerbose args
     then putStr ""
     else putStr "Start "
 
 -- | Prints a single file copy info to the console.
 putCopy :: Settings -> Int -> Int -> Int -> FilePath -> IO ()
 putCopy args total totw n dstFile = do
-  if (sVerbose args)
+  if sVerbose args
     then
-      let fmt = "%" ++ (printf "%d" totw) ++ "d\x2698%d %s\n"
+      let fmt = "%" <> printf "%d" totw <> "d\x2698%d %s\n"
        in putStr (printf fmt n total (strp dstFile))
     else putStr "."
 
 -- | Prints the footer of the output to the console.
 putFooter :: Settings -> Int -> IO ()
 putFooter args total = do
-  if (sVerbose args)
+  if sVerbose args
     then putStr (printf "Total of %d file(s) copied\n" total)
     else putStr (printf " Done(%d)\n" total)
