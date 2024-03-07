@@ -6,7 +6,7 @@ module Main (
 
 import qualified Control.Foldl as FL
 import Control.Monad.Extra
-import Data.List
+import Data.List (sortBy)
 import Data.Maybe (isNothing)
 import qualified Data.Text as T
 import Lib
