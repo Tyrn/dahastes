@@ -24,7 +24,7 @@ module Lib (
 import Data.Char (toUpper)
 import Data.Either.Extra
 import Data.IORef
-import Data.List hiding (find)
+import Data.List (intercalate)
 import Data.List.Split
 import Data.Maybe
 import Data.Monoid
