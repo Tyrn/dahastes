@@ -45,9 +45,7 @@ listDir args src = do
 -- | Makes a file name prefix out of the Artist Tag, if there is any.
 artistPrefix :: Settings -> String
 artistPrefix args =
-  case sArtistTag args of
-    Just artistName -> T.unpack artistName
-    Nothing -> ""
+  maybe "" T.unpack (sArtistTag args)
 
 -- | Makes destination file path.
 shapeDst :: Settings -> FilePath -> Int -> Int -> FilePath -> FilePath -> FilePath
