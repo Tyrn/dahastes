@@ -237,7 +237,7 @@ cmpstrNaturally :: String -> String -> Ordering
 cmpstrNaturally xx y =
   let nx = strStripNumbers xx
       ny = strStripNumbers y
-   in if nx /= [] && ny /= []
+   in if not (null nx) && not (null ny)
         then compare nx ny
         else compare xx y
 
@@ -253,7 +253,7 @@ Examples:
 removeQuotedSubstrings :: String -> String
 removeQuotedSubstrings str =
   let quoteds =
-        filter (\se -> length se > 0 && head se == '"') $
+        filter (\se -> not (null se) && head se == '"') $
           concat (str =~ ("\"(\\.|[^\"\\])*\"" :: String) :: [[String]])
    in T.unpack $
         foldr
