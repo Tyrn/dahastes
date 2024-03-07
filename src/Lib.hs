@@ -124,8 +124,8 @@ shapeTitle args n fileName ss =
     )
 
 -- | Sets tags to the destination file.
-setTagsToCopy :: Settings -> Int -> Int -> FilePath -> IO ()
-setTagsToCopy args total trackNum file
+setTagsToCopy :: Settings -> Int -> FilePath -> IO ()
+setTagsToCopy args trackNum file
   | isJust (sArtistTag args) && isAlbumTag =
       st $
         titleSetter

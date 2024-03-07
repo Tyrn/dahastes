@@ -69,7 +69,7 @@ copyFile args dstRoot total totw counter dstStep srcFile = do
   let n = if sReverse args then total - next + 1 else next
   let dst = shapeDst args dstRoot totw n dstStep srcFile
   cp srcFile dst
-  setTagsToCopy args total n dst
+  setTagsToCopy args n dst
   putCopy args total totw n dst
 
 -- | Walks the source tree, recreates source tree at destination.
