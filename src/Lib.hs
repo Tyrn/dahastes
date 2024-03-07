@@ -131,7 +131,7 @@ setTagsToCopy args total trackNum file
         titleSetter
           ( mkTitle $
               tt
-                ( (makeInitials $ T.unpack artist)
+                ( makeInitials (T.unpack artist)
                     <> " - "
                     <> T.unpack album
                 )
