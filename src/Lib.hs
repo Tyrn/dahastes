@@ -185,7 +185,7 @@ baseName = dropExtension . filename
 isAudioFile :: Settings -> FilePath -> Bool
 isAudioFile args file =
   let ext = case extension file of
-        Just extn -> (map toUpper extn)
+        Just extn -> fmap toUpper extn
         Nothing -> ""
    in elem ext checkList
  where
