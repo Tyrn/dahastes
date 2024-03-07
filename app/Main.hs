@@ -23,13 +23,13 @@ listTree args = do
 -- Builds compare function according to options (for listDir only)
 makeCompare :: Settings -> (FilePath -> FilePath -> Ordering)
 makeCompare args =
-  let path = \filePath -> strp $ dropExtension filePath
+  let path = strp . dropExtension
       cmp =
         if sSortLex args
           then \xx y -> compare (path xx) (path y)
           else \xx y -> cmpstrNaturally (path xx) (path y)
    in if sReverse args
-        then \xx y -> cmp y xx
+        then flip cmp
         else cmp
 
 {- | Serves the list of directories and the list of audio files
