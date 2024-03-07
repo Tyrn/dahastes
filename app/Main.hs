@@ -10,9 +10,7 @@ import Data.List
 import Data.Maybe (isNothing)
 import qualified Data.Text as T
 import Lib
-import System.Environment
 import System.IO hiding (FilePath, stderr, stdout)
-import Text.Printf
 import Turtle hiding (find, printf, sortBy, stderr, stdout)
 import Prelude hiding (FilePath)
 
