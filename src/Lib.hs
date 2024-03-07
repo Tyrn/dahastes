@@ -126,7 +126,7 @@ shapeTitle args n fileName ss =
 -- | Sets tags to the destination file.
 setTagsToCopy :: Settings -> Int -> Int -> FilePath -> IO ()
 setTagsToCopy args total trackNum file
-  | (sArtistTag args) /= Nothing && isAlbumTag =
+  | isJust (sArtistTag args) && isAlbumTag =
       st $
         titleSetter
           ( mkTitle $
@@ -139,7 +139,7 @@ setTagsToCopy args total trackNum file
           <> artistSetter (mkArtist artist)
           <> albumSetter (mkAlbum album)
           <> track
-  | (sArtistTag args) /= Nothing =
+  | isJust (sArtistTag args) =
       st $
         titleSetter (mkTitle $ tt $ T.unpack artist)
           <> artistSetter (mkArtist artist)
@@ -157,7 +157,7 @@ setTagsToCopy args total trackNum file
   album = case sUnifiedName args of
     Just uname -> uname
     Nothing -> fromMaybe "*" (sAlbumTag args)
-  isAlbumTag = (sAlbumTag args) /= Nothing || (sUnifiedName args) /= Nothing
+  isAlbumTag = isJust (sAlbumTag args) || isJust (sUnifiedName args)
   track =
     if sDropTracknumber args
       then mempty
