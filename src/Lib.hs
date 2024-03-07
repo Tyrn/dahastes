@@ -169,7 +169,7 @@ setTagsToCopy args total trackNum file
 (good until deprecated system-filepath removed).
 -}
 strp :: FilePath -> String
-strp path = T.unpack $ fromRight "" (FPS.toText path)
+strp path = T.unpack $ fromRight "" (FPS.toText $ FPS.fromText (T.pack path))
 
 -- | Constructs FilePath.
 wrap :: String -> FilePath
