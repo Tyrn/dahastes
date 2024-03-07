@@ -50,8 +50,8 @@ artistPrefix args =
     Nothing -> ""
 
 -- | Makes destination file path.
-shapeDst :: Settings -> FilePath -> Int -> Int -> Int -> FilePath -> FilePath -> FilePath
-shapeDst args dstRoot total totw n dstStep srcFile =
+shapeDst :: Settings -> FilePath -> Int -> Int -> FilePath -> FilePath -> FilePath
+shapeDst args dstRoot totw n dstStep srcFile =
   let prefx =
         if sStripDecorations args && isNothing (sUnifiedName args)
           then ""
@@ -69,7 +69,7 @@ copyFile :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> FilePat
 copyFile args dstRoot total totw counter dstStep srcFile = do
   next <- counter 1
   let n = if sReverse args then total - next + 1 else next
-  let dst = shapeDst args dstRoot total totw n dstStep srcFile
+  let dst = shapeDst args dstRoot totw n dstStep srcFile
   cp srcFile dst
   setTagsToCopy args total n dst
   putCopy args total totw n dst
