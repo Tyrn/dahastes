@@ -41,23 +41,23 @@ import Prelude hiding (FilePath)
 
 -- | Represents command line options.
 data Settings = Settings
-  { sVerbose :: Bool
-  , sDropTracknumber :: Bool
-  , sStripDecorations :: Bool
-  , sFileTitle :: Bool
-  , sFileTitleNum :: Bool
-  , sSortLex :: Bool
-  , sTreeDst :: Bool
-  , sDropDst :: Bool
-  , sReverse :: Bool
-  , sFileType :: Maybe Text
-  , sPrependSubdirName :: Bool
-  , sUnifiedName :: Maybe Text
-  , sAlbumNum :: Maybe Int
-  , sArtistTag :: Maybe Text
-  , sAlbumTag :: Maybe Text
-  , sSrc :: FilePath
-  , sDst :: FilePath
+  { sVerbose :: !Bool
+  , sDropTracknumber :: !Bool
+  , sStripDecorations :: !Bool
+  , sFileTitle :: !Bool
+  , sFileTitleNum :: !Bool
+  , sSortLex :: !Bool
+  , sTreeDst :: !Bool
+  , sDropDst :: !Bool
+  , sReverse :: !Bool
+  , sFileType :: !(Maybe Text)
+  , sPrependSubdirName :: !Bool
+  , sUnifiedName :: !(Maybe Text)
+  , sAlbumNum :: !(Maybe Int)
+  , sArtistTag :: !(Maybe Text)
+  , sAlbumTag :: !(Maybe Text)
+  , sSrc :: !FilePath
+  , sDst :: !FilePath
   }
 
 -- | Command line options definition.
