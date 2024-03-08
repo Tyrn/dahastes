@@ -1,8 +1,12 @@
+import Lib (cmpstrNaturally)
 import Test.Hspec
 
 main :: IO ()
 main =
-  hspec $
-    describe "dahastes-test" $
-      it "works" $
+  hspec $ do
+    describe "add" $ do
+      it "works" $ do
         2 + 2 `shouldBe` (4 :: Int)
+    describe "cmpstrNaturally" $ do
+      it "works" $ do
+        cmpstrNaturally "" "" `shouldBe` EQ
