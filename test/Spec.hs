@@ -1,12 +1,15 @@
+{-# LANGUAGE OverloadedStrings #-}
+
+import qualified Data.Text as T
 import Lib (cmpstrNaturally)
 import Test.Hspec
 
 main :: IO ()
 main =
   hspec $ do
-    describe "add" $ do
+    describe "join" $ do
       it "works" $ do
-        2 + 2 `shouldBe` (4 :: Int)
+        T.intercalate "," ["alfa", "bravo"] `shouldBe` "alfa,bravo"
     describe "cmpstrNaturally" $ do
       it "works" $ do
         cmpstrNaturally "" "" `shouldBe` EQ
