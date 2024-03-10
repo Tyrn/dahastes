@@ -11,6 +11,7 @@ module Lib (
   zeroPad,
   strStripNumbers,
   cmpstrNaturally,
+  removeQuotedSubstrings,
   makeInitials,
   setTagsToCopy,
   Settings (..),
