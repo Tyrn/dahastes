@@ -7,10 +7,11 @@ import Test.Hspec
 main :: IO ()
 main =
   hspec $ do
-    describe "join" $ do
+    describe "Join miscellany" $ do
       it "works" $ do
         T.intercalate "-" ["alfa", "bravo"] `shouldBe` "alfa-bravo"
         T.splitOn "-" "alfa-bravo" `shouldBe` ["alfa", "bravo"]
+        T.intercalate " " (T.splitOn "\"" "\"Morro\"Castle\"Bridge\"") `shouldBe` " Morro Castle Bridge "
     describe "cmpstrNaturally" $ do
       it "works" $ do
         cmpstrNaturally "" "" `shouldBe` (EQ :: Ordering)
@@ -22,4 +23,4 @@ main =
         removeQuotedSubstrings "" `shouldBe` ""
         removeQuotedSubstrings "Arleigh\"31-knot\"Burke" `shouldBe` "Arleigh Burke"
         removeQuotedSubstrings "\"Bing\"Crosby, Kris\"Tanto\"Paronto" `shouldBe` " Crosby, Kris Paronto"
-        removeQuotedSubstrings "\"Bing\"Crosby, Kris\"Tanto Paronto" `shouldBe` " Crosby, Kris Paronto"
+        removeQuotedSubstrings "\"Bing\"Crosby, Kris\"Tanto Paronto" `shouldBe` " Crosby, Kris Tanto Paronto"

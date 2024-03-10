@@ -262,7 +262,7 @@ removeQuotedSubstrings str =
             (\quoted acc -> T.replace (T.pack quoted) " " acc)
             (T.pack str)
             quoteds
-   in cleanOfPairs
+   in intercalate " " (splitOn "\"" cleanOfPairs)
 
 {- | Reduces a string of names to initials.
 
