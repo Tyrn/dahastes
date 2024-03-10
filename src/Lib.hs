@@ -256,11 +256,13 @@ removeQuotedSubstrings str =
   let quoteds =
         filter (\se -> not (null se) && head se == '"') $
           concat (str =~ ("\"(\\.|[^\"\\])*\"" :: String) :: [[String]])
-   in T.unpack $
-        foldr
-          (\quoted acc -> T.replace (T.pack quoted) " " acc)
-          (T.pack str)
-          quoteds
+      cleanOfPairs =
+        T.unpack $
+          foldr
+            (\quoted acc -> T.replace (T.pack quoted) " " acc)
+            (T.pack str)
+            quoteds
+   in cleanOfPairs
 
 {- | Reduces a string of names to initials.
 
