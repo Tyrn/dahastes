@@ -12,6 +12,7 @@ module Lib (
   strStripNumbers,
   cmpstrNaturally,
   removeQuotedSubstrings,
+  isSomeText,
   makeInitials,
   initials,
   setTagsToCopy,
@@ -23,6 +24,7 @@ module Lib (
   putFooter,
 ) where
 
+import qualified Data.ByteString as B
 import Data.Char (toUpper)
 import Data.Either.Extra
 import Data.IORef
@@ -31,6 +33,7 @@ import Data.List.Split
 import Data.Maybe
 import Data.Monoid
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import qualified Filesystem.Path.CurrentOS as FPS
 import Sound.HTagLib
 import System.IO hiding (FilePath, stderr, stdout)
@@ -291,11 +294,16 @@ makeInitials grandName =
       initialed = (\part -> intercalate "." [[head n] | n <- words part]) <$> parts
    in T.unpack $ T.toUpper $ fromString $ intercalate "-" initialed <> "."
 
+isSomeText :: Text -> Bool
+isSomeText = not . B.null . T.encodeUtf8
+
 initials :: Text -> Text
-initials authors =
-  let barrels = T.splitOn "-" $ removeQuotedSubstrings authors
-      initialedBarrel = (\barrel -> T.intercalate "." [T.take 1 n | n <- T.words barrel]) <$> barrels
-   in T.toUpper $ T.intercalate "-" initialedBarrel <> "."
+initials authorsByComma =
+  let
+    barrels = T.splitOn "-" $ removeQuotedSubstrings authorsByComma
+    initialedBarrel = (\barrel -> T.intercalate "." [T.take 1 n | n <- T.words barrel, isSomeText n]) <$> barrels
+   in
+    T.toUpper $ T.intercalate "-" initialedBarrel <> "."
 
 {- Console output -}
 

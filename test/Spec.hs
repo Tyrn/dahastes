@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import qualified Data.Text as T
-import Lib (cmpstrNaturally, initials, makeInitials, removeQuotedSubstrings)
+import Lib (cmpstrNaturally, initials, isSomeText, makeInitials, removeQuotedSubstrings)
 import Test.Hspec
 
 main :: IO ()
@@ -24,6 +24,11 @@ main =
         removeQuotedSubstrings "Arleigh\"31-knot\"Burke" `shouldBe` "Arleigh Burke"
         removeQuotedSubstrings "\"Bing\"Crosby, Kris\"Tanto\"Paronto" `shouldBe` " Crosby, Kris Paronto"
         removeQuotedSubstrings "\"Bing\"Crosby, Kris\"Tanto Paronto" `shouldBe` " Crosby, Kris Tanto Paronto"
+    describe "Join miscellany" $ do
+      it "works" $ do
+        isSomeText "" `shouldBe` False
+        isSomeText "z" `shouldBe` True
+        isSomeText "\x2698" `shouldBe` True
     describe "makeInitials" $ do
       it "works" $ do
         makeInitials "Arleigh\"31-knot\"Burke" `shouldBe` "A.B."

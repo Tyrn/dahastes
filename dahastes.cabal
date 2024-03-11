@@ -43,6 +43,7 @@ library
     -- , zeromq4-haskell
     , tasty-hunit
     , text
+    , bytestring
     , split
     , directory
     , filemanip
