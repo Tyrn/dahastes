@@ -288,8 +288,7 @@ Examples:
 makeInitials :: String -> String
 makeInitials grandName =
   let parts = splitOn "-" $ removeQuotedSubstrings grandName
-      splitPart = \part -> concat (part =~ ("[^ \t]+" :: String) :: [[String]])
-      initials = (\part -> intercalate "." [[head n] | n <- splitPart part]) <$> parts
+      initials = (\part -> intercalate "." [[head n] | n <- words part]) <$> parts
    in T.unpack $ T.toUpper $ fromString $ intercalate "-" initials <> "."
 
 {- Console output -}
