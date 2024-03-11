@@ -252,18 +252,17 @@ Examples:
 >>> removeQuotedSubstrings "\"\"ngoro\"dup\"lai \"ming\""
 " ngoro lai  "
 -}
-removeQuotedSubstrings :: String -> String
+removeQuotedSubstrings :: Text -> Text
 removeQuotedSubstrings str =
   let quoteds =
         filter (\se -> not (null se) && head se == '"') $
-          concat (str =~ ("\"(\\.|[^\"\\])*\"" :: String) :: [[String]])
+          concat (T.unpack str =~ ("\"(\\.|[^\"\\])*\"" :: String) :: [[String]])
       cleanOfPairs =
-        T.unpack $
-          foldr
-            (\quoted acc -> T.replace (T.pack quoted) " " acc)
-            (T.pack str)
-            quoteds
-   in intercalate " " (splitOn "\"" cleanOfPairs)
+        foldr
+          (\quoted acc -> T.replace (T.pack quoted) " " acc)
+          str
+          quoteds
+   in T.intercalate " " (T.splitOn "\"" cleanOfPairs)
 
 {- | Reduces a string of names to initials.
 
@@ -288,15 +287,15 @@ Examples:
 -}
 makeInitials :: String -> String
 makeInitials grandName =
-  let parts = splitOn "-" $ removeQuotedSubstrings grandName
+  let parts = splitOn "-" $ (T.unpack . removeQuotedSubstrings) (T.pack grandName)
       initialed = (\part -> intercalate "." [[head n] | n <- words part]) <$> parts
    in T.unpack $ T.toUpper $ fromString $ intercalate "-" initialed <> "."
 
-initials :: String -> String
+initials :: Text -> Text
 initials authors =
-  let barrels = splitOn "-" $ removeQuotedSubstrings authors
-      initialedBarrel = (\barrel -> intercalate "." [[head n] | n <- words barrel]) <$> barrels
-   in T.unpack $ T.toUpper $ fromString $ intercalate "-" initialedBarrel <> "."
+  let barrels = T.splitOn "-" $ removeQuotedSubstrings authors
+      initialedBarrel = (\barrel -> T.intercalate "." [T.take 1 n | n <- T.words barrel]) <$> barrels
+   in T.toUpper $ T.intercalate "-" initialedBarrel <> "."
 
 {- Console output -}
 
