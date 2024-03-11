@@ -310,37 +310,31 @@ makeInitial = T.take 1
 initials :: Text -> Text
 initials authorsByComma =
   let
-    isValidAuthor = isSomeText . T.strip . replaceAll "-" "" . replaceAll "." ""
-    isValidBarrel = isSomeText . T.strip . replaceAll "." ""
-    isValidName = isSomeText . T.strip
-    barrels = T.splitOn "-" $ removeQuotedSubstrings authorsByComma
-    initialedBarrel = (\barrel -> T.intercalate "." [T.take 1 n | n <- T.words barrel, isSomeText n]) <$> barrels
-   in
-    authorsByComma
-      & removeQuotedSubstrings
-      & T.splitOn ","
-      & filter (isSomeText . T.strip . replaceAll "-" "" . replaceAll "." "")
-      & fmap
-        ( \author ->
-            author
-              & T.splitOn "-"
-              & filter isValidBarrel
-              & fmap
-                ( \barrel ->
-                    barrel
-                      & splitOnDots
-                      & filter isValidName
-                      & fmap
-                        ( \name ->
-                            name
-                              & makeInitial
-                        )
-                      & T.intercalate "."
-                )
-              & T.intercalate "-"
-              & (<> ".")
-        )
-      & T.intercalate ","
+   in authorsByComma
+        & removeQuotedSubstrings
+        & T.splitOn ","
+        & filter (isSomeText . T.strip . replaceAll "-" "" . replaceAll "." "")
+        & fmap
+          ( \author ->
+              author
+                & T.splitOn "-"
+                & filter (isSomeText . T.strip . replaceAll "." "")
+                & fmap
+                  ( \barrel ->
+                      barrel
+                        & splitOnDots
+                        & filter (isSomeText . T.strip)
+                        & fmap
+                          ( \name ->
+                              name
+                                & makeInitial
+                          )
+                        & T.intercalate "."
+                  )
+                & T.intercalate "-"
+                & (<> ".")
+          )
+        & T.intercalate ","
 
 {- Console output -}
 
