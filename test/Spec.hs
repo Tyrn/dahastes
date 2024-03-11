@@ -49,4 +49,8 @@ main =
         makeInitials "Fitz-Simmons\tAshton-Burke Leigh" `shouldBe` "F-S.A-B.L."
     describe "initials" $ do
       it "works" $ do
-        initials "Elisabeth Kubler-- - Ross" `shouldBe` "E.K---R."
+        initials "" `shouldBe` ""
+        initials " " `shouldBe` ""
+        initials ".. , .. " `shouldBe` ""
+        initials " ,, .," `shouldBe` ""
+        initials "Elisabeth Kubler-- - Ross, Stephen King" `shouldBe` "E.K-R.,S.K."

@@ -304,6 +304,9 @@ replaceAll enc wth txt = T.intercalate wth (T.splitOn enc txt)
 splitOnDots :: Text -> [Text]
 splitOnDots = T.words . replaceAll "." " "
 
+makeInitial :: Text -> Text
+makeInitial = T.take 1
+
 initials :: Text -> Text
 initials authorsByComma =
   let
@@ -313,7 +316,31 @@ initials authorsByComma =
     barrels = T.splitOn "-" $ removeQuotedSubstrings authorsByComma
     initialedBarrel = (\barrel -> T.intercalate "." [T.take 1 n | n <- T.words barrel, isSomeText n]) <$> barrels
    in
-    T.toUpper $ T.intercalate "-" initialedBarrel <> "."
+    authorsByComma
+      & removeQuotedSubstrings
+      & T.splitOn ","
+      & filter (isSomeText . T.strip . replaceAll "-" "" . replaceAll "." "")
+      & fmap
+        ( \author ->
+            author
+              & T.splitOn "-"
+              & filter isValidBarrel
+              & fmap
+                ( \barrel ->
+                    barrel
+                      & splitOnDots
+                      & filter isValidName
+                      & fmap
+                        ( \name ->
+                            name
+                              & makeInitial
+                        )
+                      & T.intercalate "."
+                )
+              & T.intercalate "-"
+              & (<> ".")
+        )
+      & T.intercalate ","
 
 {- Console output -}
 
