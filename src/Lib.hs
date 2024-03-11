@@ -13,6 +13,7 @@ module Lib (
   cmpstrNaturally,
   removeQuotedSubstrings,
   isSomeText,
+  splitOnDots,
   makeInitials,
   initials,
   setTagsToCopy,
@@ -297,9 +298,18 @@ makeInitials grandName =
 isSomeText :: Text -> Bool
 isSomeText = not . B.null . T.encodeUtf8
 
+replaceAll :: Text -> Text -> Text -> Text
+replaceAll enc wth txt = T.intercalate wth (T.splitOn enc txt)
+
+splitOnDots :: Text -> [Text]
+splitOnDots = T.words . replaceAll "." " "
+
 initials :: Text -> Text
 initials authorsByComma =
   let
+    isValidAuthor = isSomeText . T.strip . replaceAll "-" "" . replaceAll "." ""
+    isValidBarrel = isSomeText . T.strip . replaceAll "." ""
+    isValidName = isSomeText . T.strip
     barrels = T.splitOn "-" $ removeQuotedSubstrings authorsByComma
     initialedBarrel = (\barrel -> T.intercalate "." [T.take 1 n | n <- T.words barrel, isSomeText n]) <$> barrels
    in

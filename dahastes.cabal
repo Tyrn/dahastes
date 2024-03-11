@@ -40,7 +40,6 @@ library
     , doctest
     , regex-base
     , regex-tdfa
-    -- , zeromq4-haskell
     , tasty-hunit
     , text
     , bytestring
@@ -72,6 +71,7 @@ test-suite dahastes-test
   build-depends:
     , hspec
     , text
+    , regex-tdfa
     , HUnit
     , dahastes
     , QuickCheck

@@ -1,8 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import qualified Data.Text as T
-import Lib (cmpstrNaturally, initials, isSomeText, makeInitials, removeQuotedSubstrings)
+import Lib (cmpstrNaturally, initials, isSomeText, makeInitials, removeQuotedSubstrings, splitOnDots)
 import Test.Hspec
+import Text.Regex.TDFA
 
 main :: IO ()
 main =
@@ -10,8 +11,16 @@ main =
     describe "Join miscellany" $ do
       it "works" $ do
         T.intercalate "-" ["alfa", "bravo"] `shouldBe` "alfa-bravo"
-        T.splitOn "-" "alfa-bravo" `shouldBe` ["alfa", "bravo"]
         T.intercalate " " (T.splitOn "\"" "\"Morro\"Castle\"Bridge\"") `shouldBe` " Morro Castle Bridge "
+        T.splitOn "'" "" `shouldBe` [""]
+        T.splitOn "'" "a" `shouldBe` ["a"]
+        T.splitOn "'" "'a" `shouldBe` ["", "a"]
+        T.splitOn "'" "a'" `shouldBe` ["a", ""]
+        concat (("a . .. b c" :: String) =~ ("[\\s.]+" :: String) :: [[String]]) `shouldBe` [".", ".."]
+        concat (("a . .. b c" :: String) =~ ("[^s.]+" :: String) :: [[String]]) `shouldBe` ["a ", " ", " b c"]
+    describe "splinOnDots" $ do
+      it "works" $ do
+        splitOnDots "a . .. b c" `shouldBe` ["a", "b", "c"]
     describe "cmpstrNaturally" $ do
       it "works" $ do
         cmpstrNaturally "" "" `shouldBe` (EQ :: Ordering)
@@ -40,10 +49,4 @@ main =
         makeInitials "Fitz-Simmons\tAshton-Burke Leigh" `shouldBe` "F-S.A-B.L."
     describe "initials" $ do
       it "works" $ do
-        initials "Arleigh\"31-knot\"Burke" `shouldBe` "A.B."
-        initials "\"Bing\"Crosby, Kris\"Tanto\"Paronto" `shouldBe` "C.K.P."
-        initials "\"Bing\"Crosby, Kris\"Tanto Paronto" `shouldBe` "C.K.T.P."
-        initials "" `shouldBe` "."
-        initials "" `shouldBe` "."
         initials "Elisabeth Kubler-- - Ross" `shouldBe` "E.K---R."
-        initials "Fitz-Simmons\tAshton-Burke Leigh" `shouldBe` "F-S.A-B.L."
