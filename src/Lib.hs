@@ -13,6 +13,7 @@ module Lib (
   cmpstrNaturally,
   removeQuotedSubstrings,
   makeInitials,
+  initials,
   setTagsToCopy,
   Settings (..),
   description,
@@ -288,8 +289,14 @@ Examples:
 makeInitials :: String -> String
 makeInitials grandName =
   let parts = splitOn "-" $ removeQuotedSubstrings grandName
-      initials = (\part -> intercalate "." [[head n] | n <- words part]) <$> parts
-   in T.unpack $ T.toUpper $ fromString $ intercalate "-" initials <> "."
+      initialed = (\part -> intercalate "." [[head n] | n <- words part]) <$> parts
+   in T.unpack $ T.toUpper $ fromString $ intercalate "-" initialed <> "."
+
+initials :: String -> String
+initials authors =
+  let barrels = splitOn "-" $ removeQuotedSubstrings authors
+      initialedBarrel = (\barrel -> intercalate "." [[head n] | n <- words barrel]) <$> barrels
+   in T.unpack $ T.toUpper $ fromString $ intercalate "-" initialedBarrel <> "."
 
 {- Console output -}
 
