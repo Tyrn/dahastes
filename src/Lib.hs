@@ -14,7 +14,6 @@ module Lib (
   removeQuotedSubstrings,
   isSomeText,
   splitOnDots,
-  makeInitials,
   initials,
   setTagsToCopy,
   Settings (..),
@@ -29,8 +28,6 @@ import qualified Data.ByteString as B
 import Data.Char (toUpper)
 import Data.Either.Extra
 import Data.IORef
-import Data.List (intercalate)
-import Data.List.Split
 import Data.Maybe
 import Data.Monoid
 import qualified Data.Text as T
@@ -137,9 +134,10 @@ setTagsToCopy args trackNum file
         titleSetter
           ( mkTitle $
               tt
-                ( makeInitials (T.unpack artist)
-                    <> " - "
-                    <> T.unpack album
+                ( T.unpack $
+                    initials artist
+                      <> " - "
+                      <> album
                 )
           )
           <> artistSetter (mkArtist artist)
@@ -268,33 +266,6 @@ removeQuotedSubstrings str =
           quoteds
    in T.intercalate " " (T.splitOn "\"" cleanOfPairs)
 
-{- | Reduces a string of names to initials.
-
-Examples:
-
->>> makeInitials " "
-"."
->>> makeInitials "John ronald reuel\tTolkien"
-"J.R.R.T."
->>> makeInitials "e. B. Sledge"
-"E.B.S."
->>> makeInitials "Apsley  Cherry-Garrard "
-"A.C-G."
->>> makeInitials "Windsor Saxe-\tCoburg - Gotha"
-"W.S-C-G."
->>> makeInitials "Elisabeth Kubler-- - Ross"
-"E.K---R."
->>> makeInitials "Fitz-Simmons Ashton-Burke Leigh"
-"F-S.A-B.L."
->>> makeInitials "Arleigh\"31-knot\"Burke  "
-"A.B."
--}
-makeInitials :: String -> String
-makeInitials grandName =
-  let parts = splitOn "-" $ (T.unpack . removeQuotedSubstrings) (T.pack grandName)
-      initialed = (\part -> intercalate "." [[head n] | n <- words part]) <$> parts
-   in T.unpack $ T.toUpper $ fromString $ intercalate "-" initialed <> "."
-
 isSomeText :: Text -> Bool
 isSomeText = not . B.null . T.encodeUtf8
 
@@ -307,6 +278,27 @@ splitOnDots = T.words . replaceAll "." " "
 makeInitial :: Text -> Text
 makeInitial = T.take 1
 
+{- | Reduces a string of names to initials.
+
+Examples:
+
+>>> initials " "
+"."
+>>> initials "John ronald reuel\tTolkien"
+"J.R.R.T."
+>>> initials "e. B. Sledge"
+"E.B.S."
+>>> initials "Apsley  Cherry-Garrard "
+"A.C-G."
+>>> initials "Windsor Saxe-\tCoburg - Gotha"
+"W.S-C-G."
+>>> initials "Elisabeth Kubler-- - Ross"
+"E.K-R."
+>>> initials "Fitz-Simmons Ashton-Burke Leigh"
+"F-S.A-B.L."
+>>> initials "Arleigh\"31-knot\"Burke  "
+"A.B."
+-}
 initials :: Text -> Text
 initials authorsByComma =
   let

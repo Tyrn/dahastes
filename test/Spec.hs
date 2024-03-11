@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import qualified Data.Text as T
-import Lib (cmpstrNaturally, initials, isSomeText, makeInitials, removeQuotedSubstrings, splitOnDots)
+import Lib (cmpstrNaturally, initials, isSomeText, removeQuotedSubstrings, splitOnDots)
 import Test.Hspec
 import Text.Regex.TDFA
 
@@ -38,15 +38,6 @@ main =
         isSomeText "" `shouldBe` False
         isSomeText "z" `shouldBe` True
         isSomeText "\x2698" `shouldBe` True
-    describe "makeInitials" $ do
-      it "works" $ do
-        makeInitials "Arleigh\"31-knot\"Burke" `shouldBe` "A.B."
-        makeInitials "\"Bing\"Crosby, Kris\"Tanto\"Paronto" `shouldBe` "C.K.P."
-        makeInitials "\"Bing\"Crosby, Kris\"Tanto Paronto" `shouldBe` "C.K.T.P."
-        makeInitials "" `shouldBe` "."
-        makeInitials "" `shouldBe` "."
-        makeInitials "Elisabeth Kubler-- - Ross" `shouldBe` "E.K---R."
-        makeInitials "Fitz-Simmons\tAshton-Burke Leigh" `shouldBe` "F-S.A-B.L."
     describe "initials" $ do
       it "works" $ do
         initials "" `shouldBe` ""
