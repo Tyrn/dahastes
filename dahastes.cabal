@@ -51,7 +51,7 @@ library
     , htaglib
     , system-filepath
 
-executable dahastes-exe
+executable dahastes
   import:         common-options
   hs-source-dirs: app
   main-is:        Main.hs
