@@ -5,6 +5,16 @@
 
 Generated with [template-haskell](https://github.com/jonascarpay/template-haskell)
 
-TODO: Next time write down the effing procedure!
+- [Install tools](https://github.com/Tyrn/dotfiles/blob/main/messy-notes/Haskell.md) (GHCup)
 
-As of 2024-03-12 GHC 9.4.8
+- Build and install
+
+```
+cabal build
+```
+
+```
+cabal install --installdir=$HOME/.local/bin --overwrite-policy=always
+```
+
+As of 2026-08-11 GHC 9.10.3
