@@ -21,7 +21,8 @@ extra-doc-files:
 --   location: git://github.com/FIXME/dahastes.git
 
 common common-options
-  build-depends:    base >=4.9 && <5
+  -- build-depends:    base >=4.9 && <5
+  build-depends:   base ^>=4.20.2.0
   default-language: GHC2024
   ghc-options:
     -Wall -Wcompat -Widentities -Wincomplete-uni-patterns
@@ -33,7 +34,6 @@ library
   hs-source-dirs:  src
   exposed-modules: Lib
   build-depends:
-    , base ^>=4.20.2.0
     , containers
     , mtl
     , extra
@@ -57,7 +57,6 @@ executable dahastes
   hs-source-dirs: app
   main-is:        Main.hs
   build-depends:
-    , base ^>=4.20.2.0
     , dahastes
     , turtle
     , text
@@ -71,7 +70,6 @@ test-suite dahastes-test
   hs-source-dirs: test
   main-is:        Spec.hs
   build-depends:
-    , base ^>=4.20.2.0
     , hspec
     , text
     , regex-tdfa
@@ -87,7 +85,6 @@ benchmark dahastes-bench
   hs-source-dirs: bench
   main-is:        Main.hs
   build-depends:
-    , base ^>=4.20.2.0
     , criterion
     , dahastes
 
