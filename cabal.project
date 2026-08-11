@@ -1,5 +1,1 @@
-packages:
-  ./
-
-package dahastes
-  tests: True
+packages: .
