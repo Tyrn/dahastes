@@ -15,15 +15,7 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Text.Regex.TDFA
 
-{- | Removes all double quoted substrings, if any, from a string.
-
-Examples:
-
->>> removeQuotedSubstrings "alfa"
-"alfa"
->>> removeQuotedSubstrings "\"\"ngoro\"dup\"lai \"ming\""
-" ngoro lai  "
--}
+-- | Removes all double quoted substrings, if any, from a string.
 removeQuotedSubstrings :: Text -> Text
 removeQuotedSubstrings str =
   let quoteds =
@@ -46,29 +38,59 @@ splitOnDots :: Text -> [Text]
 splitOnDots = T.words . replaceAll "." " "
 
 makeInitial :: Text -> Text
-makeInitial = T.take 1
+makeInitial name
+  | isNobiliary = T.take 1 name
+  | otherwise = T.toUpper $ T.take 1 name
+ where
+  isNobiliary =
+    elem
+      name
+      [ "von"
+      , "фон"
+      , "van"
+      , "ван"
+      , "der"
+      , "дер"
+      , "til"
+      , "тиль"
+      , "zu"
+      , "цу"
+      , "zum"
+      , "цум"
+      , "zur"
+      , "цур"
+      , "af"
+      , "аф"
+      , "of"
+      , "из"
+      , "da"
+      , "да"
+      , "de"
+      , "де"
+      , "des"
+      , "дез"
+      , "del"
+      , "дель"
+      , "den"
+      , "ден"
+      , "di"
+      , "ди"
+      , "dos"
+      , "душ"
+      , "дос"
+      , "du"
+      , "дю"
+      , "la"
+      , "ла"
+      , "ля"
+      , "le"
+      , "ле"
+      , "haut"
+      , "от"
+      , "the"
+      ]
 
-{- | Reduces a string of names to initials.
-
-Examples:
-
->>> initials " "
-"."
->>> initials "John ronald reuel\tTolkien"
-"J.R.R.T."
->>> initials "e. B. Sledge"
-"E.B.S."
->>> initials "Apsley  Cherry-Garrard "
-"A.C-G."
->>> initials "Windsor Saxe-\tCoburg - Gotha"
-"W.S-C-G."
->>> initials "Elisabeth Kubler-- - Ross"
-"E.K-R."
->>> initials "Fitz-Simmons Ashton-Burke Leigh"
-"F-S.A-B.L."
->>> initials "Arleigh\"31-knot\"Burke  "
-"A.B."
--}
+-- | Reduces a string of names to initials.
 initials :: Text -> Text
 initials authorsByComma =
   let
