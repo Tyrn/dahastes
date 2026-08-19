@@ -8,9 +8,9 @@ module Initials (
 ) where
 
 import Data.ByteString qualified as B
+import Data.Char (isLower, isUpper, toUpper)
 import Data.Function ((&))
 import Data.Text (Text)
-
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Text.Regex.TDFA
@@ -40,7 +40,8 @@ splitOnDots = T.words . replaceAll "." " "
 makeInitial :: Text -> Text
 makeInitial name
   | isNobiliary = T.take 1 name
-  | otherwise = T.toUpper $ T.take 1 name
+  -- \| otherwise = T.toUpper $ T.take 1 name
+  | otherwise = formInitial name
  where
   isNobiliary =
     elem
@@ -89,6 +90,37 @@ makeInitial name
       , "от"
       , "the"
       ]
+
+formInitial :: Text -> Text
+formInitial name
+  | T.any (== '\'') name = apostropheInitial name
+  | name `elem` ["Старший"] = "Ст"
+  | name `elem` ["Младший"] = "Мл"
+  | name `elem` singlePrefixes = name
+  | T.length name > 1 = camelCaseInitial name
+  | otherwise = T.singleton (toUpper (T.head name))
+ where
+  singlePrefixes = ["Ст", "ст", "Sr", "Мл", "мл", "Jr"]
+
+  apostropheInitial :: Text -> Text
+  apostropheInitial n = case T.splitOn "'" n of
+    [pre, post]
+      | not (T.null post) && T.length post > 1 ->
+          if isLower (T.head post) && not (T.null pre)
+            then T.singleton (toUpper (T.head pre))
+            else pre <> "'" <> T.singleton (T.head post)
+    _ -> T.singleton (toUpper (T.head n))
+
+  camelCaseInitial :: Text -> Text
+  camelCaseInitial n =
+    let first = T.head n
+        rest = T.drop 1 n
+        (prefix, suffix) = T.break isUpper rest
+     in if T.null suffix
+          then T.singleton (toUpper first)
+          else T.cons first (prefix <> T.singleton (T.head suffix))
+
+-- \^ Include the uppercase character that triggered the break
 
 -- | Reduces a string of names to initials.
 initials :: Text -> Text
