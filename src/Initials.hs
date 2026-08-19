@@ -39,13 +39,43 @@ splitOnDots = T.words . replaceAll "." " "
 
 makeInitial :: Text -> Text
 makeInitial name
-  | isNobiliary = T.take 1 name
-  -- \| otherwise = T.toUpper $ T.take 1 name
-  | otherwise = formInitial name
+  | isNobiliary name = T.take 1 name
+  | T.any (== '\'') name = apostropheInitial name
+  | name `elem` ["Старший"] = "Ст"
+  | name `elem` ["Младший"] = "Мл"
+  | name `elem` singlePrefixes = name
+  | T.length name > 1 = camelCaseInitial name
+  | otherwise = T.singleton (toUpper (T.head name))
  where
-  isNobiliary =
+  singlePrefixes = ["Ст", "ст", "Sr", "Мл", "мл", "Jr"]
+
+  apostropheInitial :: Text -> Text
+  apostropheInitial n = case T.splitOn "'" n of
+    -- Case: pre'post with post having multiple chars (e.g., O'Connor)
+    [pre, post]
+      | not (T.null post) && T.length post > 1 ->
+          if isLower (T.head post) && not (T.null pre)
+            then T.singleton (toUpper (T.head pre))
+            else pre <> "'" <> T.singleton (T.head post)
+    -- Case: 'post (e.g., 'B)
+    ["", post]
+      | not (T.null post) ->
+          "'" <> T.singleton (T.head post)
+    -- Fallback: single character or already just the first letter
+    _ -> T.singleton (toUpper (T.head n))
+
+  camelCaseInitial :: Text -> Text
+  camelCaseInitial n =
+    let first = T.head n
+        rest = T.drop 1 n
+        (prefix, suffix) = T.break isUpper rest
+     in if T.null suffix
+          then T.singleton (toUpper first)
+          else T.cons first (prefix <> T.singleton (T.head suffix))
+
+  isNobiliary n =
     elem
-      name
+      n
       [ "von"
       , "фон"
       , "van"
@@ -90,41 +120,6 @@ makeInitial name
       , "от"
       , "the"
       ]
-
-formInitial :: Text -> Text
-formInitial name
-  | T.any (== '\'') name = apostropheInitial name
-  | name `elem` ["Старший"] = "Ст"
-  | name `elem` ["Младший"] = "Мл"
-  | name `elem` singlePrefixes = name
-  | T.length name > 1 = camelCaseInitial name
-  | otherwise = T.singleton (toUpper (T.head name))
- where
-  singlePrefixes = ["Ст", "ст", "Sr", "Мл", "мл", "Jr"]
-
-  apostropheInitial :: Text -> Text
-  apostropheInitial n = case T.splitOn "'" n of
-    -- Case: pre'post with post having multiple chars (e.g., O'Connor)
-    [pre, post]
-      | not (T.null post) && T.length post > 1 ->
-          if isLower (T.head post) && not (T.null pre)
-            then T.singleton (toUpper (T.head pre))
-            else pre <> "'" <> T.singleton (T.head post)
-    -- Case: 'post (e.g., 'B)
-    ["", post]
-      | not (T.null post) ->
-          "'" <> T.singleton (T.head post)
-    -- Fallback: single character or already just the first letter
-    _ -> T.singleton (toUpper (T.head n))
-
-  camelCaseInitial :: Text -> Text
-  camelCaseInitial n =
-    let first = T.head n
-        rest = T.drop 1 n
-        (prefix, suffix) = T.break isUpper rest
-     in if T.null suffix
-          then T.singleton (toUpper first)
-          else T.cons first (prefix <> T.singleton (T.head suffix))
 
 -- | Reduces a string of names to initials.
 initials :: Text -> Text
