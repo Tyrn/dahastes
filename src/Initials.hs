@@ -40,17 +40,17 @@ splitOnDots = T.words . replaceAll "." " "
 makeInitial :: Text -> Text
 makeInitial name
   | isNobiliary name = T.take 1 name
-  | T.any (== '\'') name = apostropheInitial name
+  | T.any (== '\'') name = apostrophed name
   | name `elem` ["Старший"] = "Ст"
   | name `elem` ["Младший"] = "Мл"
   | name `elem` singlePrefixes = name
-  | T.length name > 1 = camelCaseInitial name
-  | otherwise = T.singleton (toUpper (T.head name))
+  | T.length name > 1 = camelCaseAndOrdinary name
+  | otherwise = T.singleton (toUpper (T.head name)) -- Just length < 2
  where
   singlePrefixes = ["Ст", "ст", "Sr", "Мл", "мл", "Jr"]
 
-  apostropheInitial :: Text -> Text
-  apostropheInitial n = case T.splitOn "'" n of
+  apostrophed :: Text -> Text
+  apostrophed n = case T.splitOn "'" n of
     -- Case: pre'post with post having multiple chars (e.g., O'Connor)
     [pre, post]
       | not (T.null post) && T.length post > 1 ->
@@ -64,8 +64,8 @@ makeInitial name
     -- Fallback: single character or already just the first letter
     _ -> T.singleton (toUpper (T.head n))
 
-  camelCaseInitial :: Text -> Text
-  camelCaseInitial n =
+  camelCaseAndOrdinary :: Text -> Text
+  camelCaseAndOrdinary n =
     let first = T.head n
         rest = T.drop 1 n
         (prefix, suffix) = T.break isUpper rest

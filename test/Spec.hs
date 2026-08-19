@@ -46,6 +46,7 @@ main =
         initials ".. , .. " `shouldBe` ""
         initials " ,, .," `shouldBe` ""
         initials " ,, . -," `shouldBe` ""
+        initials "a b ü" `shouldBe` "A.B.Ü."
         initials ", a. g, " `shouldBe` "A.G."
         initials "- , -I.V.-A,E.C.N-, ." `shouldBe` "I.V-A.,E.C.N."
         initials "John ronald reuel Tolkien" `shouldBe` "J.R.R.T."
