@@ -104,11 +104,17 @@ formInitial name
 
   apostropheInitial :: Text -> Text
   apostropheInitial n = case T.splitOn "'" n of
+    -- Case: pre'post with post having multiple chars (e.g., O'Connor)
     [pre, post]
       | not (T.null post) && T.length post > 1 ->
           if isLower (T.head post) && not (T.null pre)
             then T.singleton (toUpper (T.head pre))
             else pre <> "'" <> T.singleton (T.head post)
+    -- Case: 'post (e.g., 'B)
+    ["", post]
+      | not (T.null post) ->
+          "'" <> T.singleton (T.head post)
+    -- Fallback: single character or already just the first letter
     _ -> T.singleton (toUpper (T.head n))
 
   camelCaseInitial :: Text -> Text
@@ -119,8 +125,6 @@ formInitial name
      in if T.null suffix
           then T.singleton (toUpper first)
           else T.cons first (prefix <> T.singleton (T.head suffix))
-
--- \^ Include the uppercase character that triggered the break
 
 -- | Reduces a string of names to initials.
 initials :: Text -> Text
