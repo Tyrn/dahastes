@@ -4,11 +4,11 @@ module Main (
   main,
 ) where
 
-import qualified Control.Foldl as FL
+import Control.Foldl qualified as FL
 import Control.Monad.Extra
 import Data.List (sortBy)
 import Data.Maybe (isNothing)
-import qualified Data.Text as T
+import Data.Text qualified as T
 import Lib
 import System.IO hiding (FilePath, stderr, stdout)
 import Turtle hiding (find, printf, sortBy, stderr, stdout)

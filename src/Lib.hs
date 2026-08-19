@@ -24,15 +24,15 @@ module Lib (
   putFooter,
 ) where
 
-import qualified Data.ByteString as B
+import Data.ByteString qualified as B
 import Data.Char (toUpper)
 import Data.Either.Extra
 import Data.IORef
 import Data.Maybe
 import Data.Monoid
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
-import qualified Filesystem.Path.CurrentOS as FPS
+import Data.Text qualified as T
+import Data.Text.Encoding qualified as T
+import Filesystem.Path.CurrentOS qualified as FPS
 import Sound.HTagLib
 import System.IO hiding (FilePath, stderr, stdout)
 import Text.Printf
