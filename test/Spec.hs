@@ -1,7 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Data.Text qualified as T
-import Lib (cmpstrNaturally, initials, isSomeText, removeQuotedSubstrings, splitOnDots)
+import Initials (initials, isSomeText, removeQuotedSubstrings, splitOnDots)
+import Lib (cmpstrNaturally)
 import Test.Hspec
 import Text.Regex.TDFA
 
