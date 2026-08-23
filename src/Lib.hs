@@ -61,7 +61,10 @@ data Settings = Settings
   }
 
 hi :: String
-hi :: String = "\x2728"
+hi = "\x2728"
+
+su :: String
+su = "❔"
 
 -- | Command line options definition.
 settingsP :: Parser Settings
@@ -77,25 +80,25 @@ settingsP =
     <*> switch "dropdst" 'p' "Do not create destination directory"
     <*> switch "rev" 'r' "Copy files in reverse order (number one file is the last to be copied)"
     <*> optional (optText "filetype" 'e' "Accept only audio files of the specified type")
-    <*> switch "prependsubdirname" 'i' "prepend current subdirectory name to a file name"
-    <*> optional (optText "unifiedname" 'u' "Base name for everything, except for the \"Artist\" tag")
+    <*> switch "prependsubdirname" 'i' "Prepend current subdirectory name to a file name"
+    <*> optional (optText "unifiedname" 'u' [i|#{hi} Base name for everything, except for the "Artist" tag|])
     <*> optional (optInt "albumnum" 'b' "Add album number to destination")
-    <*> optional (optText "artisttag" 'a' "\"Artist\" tag")
-    <*> optional (optText "albumtag" 'g' "\"Album\" tag")
+    <*> optional (optText "artisttag" 'a' [i|#{hi} "Artist" tag|])
+    <*> optional (optText "albumtag" 'g' [i|#{hi} "Album" tag|])
     <*> argPath "src" "Source directory"
     <*> argPath "dst" "Destination directory"
 
 -- | Utility description (help screen header).
 description :: Description
 description =
-  "pch \"Procrustes\" SmArT is a CLI utility for copying subtrees containing supported\n\
-  \audio files in sequence, naturally sorted.\n\
-  \The end result is a flattened copy of the source subtree. \"Flattened\" means\n\
-  \that only a namesake of the root source directory is created, where all the files get\n\
-  \copied to, names prefixed with a serial number. Tag \"Track Number\"\n\
-  \is set, tags \"Title\", \"Artist\", and \"Album\" can be replaced optionally.\n\
-  \The writing process is strictly sequential: either starting with the number one file,\n\
-  \or in the reversed order. This can be important for some mobile devices."
+  [i|  Dahastes a.k.a. Damastes SmArT is a CLI utility for copying subtrees containing
+  supported audio files in sequence, naturally sorted. The end result is a flattened copy
+  of the source subtree. "Flattened" means that only a namesake of the root source
+  directory is created, where all the files get copied to, names prefixed with a serial
+  number. Tag "Track Number" is set, tags "Title", "Artist", and "Album" can be replaced
+  optionally. The writing process is strictly sequential: either starting with the number
+  one file, or in the reversed order. This can be important for some mobile devices.
+  #{hi} Really useful options. #{su} Suspicious media.|]
 
 {- Counter, mostly global -}
 
