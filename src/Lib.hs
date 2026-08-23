@@ -60,11 +60,14 @@ data Settings = Settings
   , sDst :: !FilePath
   }
 
+hi :: String
+hi :: String = "\x2728"
+
 -- | Command line options definition.
 settingsP :: Parser Settings
 settingsP =
   Settings
-    <$> switch "verbose" 'v' [i|#{hi} UnlesS verbose, just progress bar is shown|]
+    <$> switch "verbose" 'v' [i|#{hi} Unless verbose, just progress bar is shown|]
     <*> switch "droptracknumber" 'd' "Do not set track numbers"
     <*> switch "stripdecorations" 's' "Strip file and directory name decorations"
     <*> switch "filetitle" 'f' "Use file name for title tag"
@@ -81,8 +84,6 @@ settingsP =
     <*> optional (optText "albumtag" 'g' "\"Album\" tag")
     <*> argPath "src" "Source directory"
     <*> argPath "dst" "Destination directory"
- where
-  hi :: [Char] = "\x2728"
 
 -- | Utility description (help screen header).
 description :: Description
