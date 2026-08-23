@@ -22,7 +22,9 @@ extra-doc-files:
 
 common common-options
   -- build-depends:    base >=4.9 && <5
-  build-depends:   base ^>=4.20.2.0
+  build-depends:
+    , base ^>=4.20.2.0
+    , string-interpolate ^>= 0.3
   default-language: GHC2024
   ghc-options:
     -Wall -Wcompat -Widentities -Wincomplete-uni-patterns

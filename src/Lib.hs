@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 -- | Support for Procrustes SmArT utility (audio album builder).
 module Lib (
@@ -25,6 +26,7 @@ import Data.Either.Extra
 import Data.IORef
 import Data.Maybe
 import Data.Monoid
+import Data.String.Interpolate (i)
 import Data.Text qualified as T
 import Filesystem.Path.CurrentOS qualified as FPS
 import Initials
@@ -62,7 +64,7 @@ data Settings = Settings
 settingsP :: Parser Settings
 settingsP =
   Settings
-    <$> switch "verbose" 'v' "Unless verbose, just progress bar is shown"
+    <$> switch "verbose" 'v' [i|#{hi} UnlesS verbose, just progress bar is shown|]
     <*> switch "droptracknumber" 'd' "Do not set track numbers"
     <*> switch "stripdecorations" 's' "Strip file and directory name decorations"
     <*> switch "filetitle" 'f' "Use file name for title tag"
@@ -79,6 +81,8 @@ settingsP =
     <*> optional (optText "albumtag" 'g' "\"Album\" tag")
     <*> argPath "src" "Source directory"
     <*> argPath "dst" "Destination directory"
+ where
+  hi :: [Char] = "\x2728"
 
 -- | Utility description (help screen header).
 description :: Description
@@ -102,8 +106,8 @@ makeCounter :: IO Counter
 makeCounter = do
   r <- newIORef 0
   return
-    ( \i -> do
-        modifyIORef r (+ i)
+    ( \idx -> do
+        modifyIORef r (+ idx)
         readIORef r
     )
 
@@ -216,7 +220,7 @@ Examples:
 strStripNumbers :: String -> [Int]
 strStripNumbers str =
   let numbers = concat (str =~ ("[0-9]+" :: String) :: [[String]])
-   in [read i :: Int | i <- numbers]
+   in [read n :: Int | n <- numbers]
 
 {- | If both strings contain digits, returns numerical comparison based on the numeric
 values embedded in the strings, otherwise returns the standard string comparison.
