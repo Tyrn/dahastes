@@ -84,7 +84,7 @@ settingsP =
     <*> optional (optText "unifiedname" 'u' [i|#{hi} Base name for everything, except for the "Artist" tag|])
     <*> optional (optInt "albumnum" 'b' "Add album number to destination")
     <*> optional (optText "artisttag" 'a' [i|#{hi} "Artist" tag|])
-    <*> optional (optText "albumtag" 'g' [i|#{hi} "Album" tag|])
+    <*> optional (optText "albumtag" 'm' [i|#{hi} "Album" tag|])
     <*> argPath "src" "Source directory"
     <*> argPath "dst" "Destination directory"
 
