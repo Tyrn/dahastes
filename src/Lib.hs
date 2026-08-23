@@ -63,6 +63,9 @@ data Settings = Settings
 hi :: String
 hi = "\x2728"
 
+fw :: String
+fw = "\x1fabb"
+
 su :: String
 su = "❔"
 
@@ -262,7 +265,7 @@ putCopy :: Settings -> Int -> Int -> Int -> FilePath -> IO ()
 putCopy args total totw n dstFile = do
   if sVerbose args
     then
-      let fmt = "%" <> printf "%d" totw <> "d\x2698%d %s\n"
+      let fmt = "%" <> printf "%d" totw <> [i|d#{fw}%d %s\n|]
        in putStr (printf fmt n total (strp dstFile))
     else putStr "."
 
