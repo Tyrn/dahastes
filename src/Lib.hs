@@ -64,7 +64,7 @@ hi :: String
 hi = "\x2728"
 
 fw :: String
-fw = "\x1fabb"
+fw = "\x1f98b"
 
 su :: String
 su = "❔"
