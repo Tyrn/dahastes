@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Data.Text qualified as T
-import Initials (initials, isSomeText, removeQuotedSubstrings, splitOnDots, splitRawQuoted)
+import Initials (collectQuotedSubstrings, initials, isSomeText, removeQuotedSubstrings, splitOnDots)
 import Lib (cmpstrNaturally)
 import Test.Hspec
 import Text.Regex.TDFA
@@ -28,17 +28,16 @@ main =
         cmpstrNaturally "" "a" `shouldBe` LT
         cmpstrNaturally "2a" "10a" `shouldBe` LT
         cmpstrNaturally "alfa" "bravo" `shouldBe` LT
-    describe "splitRawQuoted" $ do
+    describe "collectQuotedSubstrings" $ do
       it "works" $ do
-        splitRawQuoted "\"Bing\"Crosby, Arleigh\"31-knot\"Burke, Kris\"Tanto" `shouldBe` [["\"Bing\"", "g"], ["\"31-knot\"", "t"]]
-        concat (splitRawQuoted "\"Bing\"Crosby, Arleigh\"31-knot\"Burke, Kris Tanto\"") `shouldBe` ["\"Bing\"", "g", "\"31-knot\"", "t"]
-        ( filter
+        collectQuotedSubstrings "\"Bing\"Crosby, Arleigh\"31-knot\"Burke, Kris\"Tanto" `shouldBe` ["\"Bing\"", "\"31-knot\""]
+        collectQuotedSubstrings "\"Bing\"Crosby, Arleigh\"31-knot\"Burke, Kris Tanto\"" `shouldBe` ["\"Bing\"", "\"31-knot\""]
+        ( filter -- No garbage any more; the filter is superfluous
             ( \case
                 ('"' : _) -> True
                 _ -> False
             )
-            $ concat
-            $ splitRawQuoted "\"Bing\"Crosby, Arleigh\"31-knot\"Burke, Kris Tanto\""
+            $ collectQuotedSubstrings "\"Bing\"Crosby, Arleigh\"31-knot\"Burke, Kris Tanto\""
           )
           `shouldBe` ["\"Bing\"", "\"31-knot\""]
     describe "removeQuotedSubstrings" $ do

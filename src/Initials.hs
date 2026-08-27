@@ -6,12 +6,13 @@ module Initials (
   isSomeText,
   removeQuotedSubstrings,
   splitOnDots,
-  splitRawQuoted,
+  collectQuotedSubstrings,
 ) where
 
 import Data.ByteString qualified as B
 import Data.Char (isLower, isUpper, toUpper)
 import Data.Function ((&))
+import Data.List (isPrefixOf, isSuffixOf)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
@@ -20,23 +21,20 @@ import Text.Regex.TDFA
 -- | Removes all double quoted substrings, if any, from a string.
 removeQuotedSubstrings :: Text -> Text
 removeQuotedSubstrings str =
-  let quoteds =
-        filter
-          ( \case
-              ('"' : _) -> True
-              _ -> False
-          )
-          $ concat
-          $ splitRawQuoted str
-      cleanOfPairs =
-        foldr
-          (\quoted acc -> T.replace (T.pack quoted) " " acc)
-          str
-          quoteds
-   in T.intercalate " " (T.splitOn "\"" cleanOfPairs)
+  let
+    rebuildWithoutQuotedSubstrings =
+      foldr
+        (\quoted acc -> T.replace (T.pack quoted) " " acc)
+        str
+        (collectQuotedSubstrings str)
+   in
+    T.intercalate " " (T.splitOn "\"" rebuildWithoutQuotedSubstrings) -- Remove the odd quote.
 
-splitRawQuoted :: Text -> [[String]]
-splitRawQuoted str = T.unpack str =~ ("\"(\\.|[^\"\\])*\"" :: String) :: [[String]]
+-- | Provides a list of all double quoted substrings, quotes included.
+collectQuotedSubstrings :: Text -> [String]
+collectQuotedSubstrings str =
+  let raw = T.unpack str =~ ("\"[^\"]*\"" :: String) :: [[String]]
+   in concat $ filter (\case (s : _) -> "\"" `isPrefixOf` s && "\"" `isSuffixOf` s; _ -> False) raw
 
 isSomeText :: Text -> Bool
 isSomeText = not . B.null . T.encodeUtf8
