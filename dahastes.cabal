@@ -79,7 +79,7 @@ test-suite dahastes-test
     , dahastes
     , QuickCheck
   build-tool-depends:
-    , calligraphy:calligraphy
+--    , calligraphy:calligraphy
   ghc-options:    -threaded -rtsopts -with-rtsopts=-N
 
 benchmark dahastes-bench
