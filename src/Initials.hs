@@ -6,6 +6,7 @@ module Initials (
   isSomeText,
   removeQuotedSubstrings,
   splitOnDots,
+  splitRawQuoted,
 ) where
 
 import Data.ByteString qualified as B
@@ -25,13 +26,17 @@ removeQuotedSubstrings str =
               ('"' : _) -> True
               _ -> False
           )
-          $ concat (T.unpack str =~ ("\"(\\.|[^\"\\])*\"" :: String) :: [[String]])
+          $ concat
+          $ splitRawQuoted str
       cleanOfPairs =
         foldr
           (\quoted acc -> T.replace (T.pack quoted) " " acc)
           str
           quoteds
    in T.intercalate " " (T.splitOn "\"" cleanOfPairs)
+
+splitRawQuoted :: Text -> [[String]]
+splitRawQuoted str = T.unpack str =~ ("\"(\\.|[^\"\\])*\"" :: String) :: [[String]]
 
 isSomeText :: Text -> Bool
 isSomeText = not . B.null . T.encodeUtf8
