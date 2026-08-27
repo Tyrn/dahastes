@@ -12,7 +12,7 @@ module Initials (
 import Data.ByteString qualified as B
 import Data.Char (isLower, isUpper, toUpper)
 import Data.Function ((&))
-import Data.List (isPrefixOf, isSuffixOf)
+import Data.List (isPrefixOf)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
@@ -34,7 +34,7 @@ removeQuotedSubstrings str =
 collectQuotedSubstrings :: Text -> [String]
 collectQuotedSubstrings str =
   let raw = T.unpack str =~ ("\"[^\"]*\"" :: String) :: [[String]]
-   in concat $ filter (\case (s : _) -> "\"" `isPrefixOf` s && "\"" `isSuffixOf` s; _ -> False) raw
+   in concat $ filter (\case (s : _) -> "\"" `isPrefixOf` s; _ -> False) raw
 
 isSomeText :: Text -> Bool
 isSomeText = not . B.null . T.encodeUtf8
