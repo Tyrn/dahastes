@@ -19,8 +19,12 @@ import Text.Regex.TDFA
 removeQuotedSubstrings :: Text -> Text
 removeQuotedSubstrings str =
   let quoteds =
-        filter (\se -> not (null se) && head se == '"') $
-          concat (T.unpack str =~ ("\"(\\.|[^\"\\])*\"" :: String) :: [[String]])
+        filter
+          ( \case
+              ('"' : _) -> True
+              _ -> False
+          )
+          $ concat (T.unpack str =~ ("\"(\\.|[^\"\\])*\"" :: String) :: [[String]])
       cleanOfPairs =
         foldr
           (\quoted acc -> T.replace (T.pack quoted) " " acc)
