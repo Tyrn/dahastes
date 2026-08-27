@@ -7,7 +7,7 @@ Generated with [template-haskell](https://github.com/jonascarpay/template-haskel
 
 - [Install tools](https://github.com/Tyrn/dotfiles/blob/main/messy-notes/Haskell.md) (GHCup)
 
-- Build and install
+- Build and install (as of 2026-08-11 GHC 9.10.3)
 
 ```
 cabal build
@@ -17,4 +17,5 @@ cabal build
 cabal install --installdir=$HOME/.local/bin --overwrite-policy=always
 ```
 
-As of 2026-08-11 GHC 9.10.3
+- [Calligraphy](https://github.com/jonascarpay/calligraphy),
+  [Notes](https://github.com/Tyrn/dotfiles/blob/main/messy-notes/Haskell.md)
