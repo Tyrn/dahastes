@@ -12,7 +12,6 @@ module Initials (
 import Data.ByteString qualified as B
 import Data.Char (isLower, isUpper, toUpper)
 import Data.Function ((&))
-import Data.List (isPrefixOf)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
@@ -28,13 +27,23 @@ removeQuotedSubstrings str =
         str
         (collectQuotedSubstrings str)
    in
-    T.intercalate " " (T.splitOn "\"" rebuildWithoutQuotedSubstrings) -- Remove the odd quote.
+    -- Remove the odd quote, if any.
+    T.intercalate " " (T.splitOn "\"" rebuildWithoutQuotedSubstrings)
 
 -- | Provides a list of all double quoted substrings, quotes included.
 collectQuotedSubstrings :: Text -> [String]
 collectQuotedSubstrings str =
   let raw = T.unpack str =~ ("\"[^\"]*\"" :: String) :: [[String]]
-   in concat $ filter (\case (s : _) -> "\"" `isPrefixOf` s; _ -> False) raw
+   in -- concat $ filter (\case (s : _) -> "\"" `isPrefixOf` s; _ -> False) raw
+      concat $
+        filter
+          ( \(xs :: [String]) -> case xs of
+              (s : _) -> case s of
+                ('"' : _) -> True
+                _ -> False
+              [] -> False
+          )
+          raw
 
 isSomeText :: Text -> Bool
 isSomeText = not . B.null . T.encodeUtf8
