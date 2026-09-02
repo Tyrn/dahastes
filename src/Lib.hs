@@ -42,6 +42,7 @@ import Prelude hiding (FilePath)
 -- | Represents command line options.
 data Settings = Settings
   { sVerbose :: !Bool
+  , sVersion :: !Bool
   , sDropTracknumber :: !Bool
   , sStripDecorations :: !Bool
   , sFileTitle :: !Bool
@@ -50,6 +51,9 @@ data Settings = Settings
   , sTreeDst :: !Bool
   , sDropDst :: !Bool
   , sReverse :: !Bool
+  , sOverwrite :: !Bool
+  , sDryrun :: !Bool
+  , sCount :: !Bool
   , sFileType :: !(Maybe Text)
   , sPrependSubdirName :: !Bool
   , sUnifiedName :: !(Maybe Text)
@@ -74,6 +78,7 @@ settingsP :: Parser Settings
 settingsP =
   Settings
     <$> switch "verbose" 'v' [i|#{hi} Unless verbose, just progress bar is shown|]
+    <*> switch "version" 'V' "Show the version and exit"
     <*> switch "droptracknumber" 'd' "Do not set track numbers"
     <*> switch "stripdecorations" 's' "Strip file and directory name decorations"
     <*> switch "filetitle" 'f' "Use file name for title tag"
@@ -82,6 +87,9 @@ settingsP =
     <*> switch "treedst" 't' "Retain the tree structure of the source album at destination"
     <*> switch "dropdst" 'p' "Do not create destination directory"
     <*> switch "rev" 'r' "Copy files in reverse order (number one file is the last to be copied)"
+    <*> switch "overwrite" 'w' "Silently remove existing destination directory"
+    <*> switch "dryrun" 'y' "Without writing; trumps -w, too"
+    <*> switch "count" 'c' "Just count the files"
     <*> optional (optText "filetype" 'e' "Accept only audio files of the specified type")
     <*> switch "prependsubdirname" 'i' "Prepend current subdirectory name to a file name"
     <*> optional (optText "unifiedname" 'u' [i|#{hi} Base name for everything, except for the "Artist" tag|])
