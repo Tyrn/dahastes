@@ -64,6 +64,9 @@ data Settings = Settings
   , sDst :: !FilePath
   }
 
+ar :: String
+ar = "\x1f4a5"
+
 hi :: String
 hi = "\x2728"
 
@@ -87,7 +90,7 @@ settingsP =
     <*> switch "treedst" 't' "Retain the tree structure of the source album at destination"
     <*> switch "dropdst" 'p' "Do not create destination directory"
     <*> switch "rev" 'r' "Copy files in reverse order (number one file is the last to be copied)"
-    <*> switch "overwrite" 'w' "Silently remove existing destination directory"
+    <*> switch "overwrite" 'w' [i|#{ar} Silently remove existing destination directory|]
     <*> switch "dryrun" 'y' "Without writing; trumps -w, too"
     <*> switch "count" 'c' "Just count the files"
     <*> optional (optText "filetype" 'e' "Accept only audio files of the specified type")
