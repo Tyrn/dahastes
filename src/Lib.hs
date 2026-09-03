@@ -3,22 +3,10 @@
 
 -- | Support for Procrustes SmArT utility (audio album builder).
 module Lib (
-  strp,
-  wrap,
-  baseName,
-  makeCounter,
-  Counter,
-  isAudioFile,
-  zeroPad,
-  strStripNumbers,
   cmpstrNaturally,
-  setTagsToCopy,
   Settings (..),
   description,
   settingsP,
-  putHeader,
-  putCopy,
-  putFooter,
   copyAlbum,
 ) where
 
