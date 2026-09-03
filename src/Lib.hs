@@ -65,16 +65,16 @@ data Settings = Settings
   }
 
 ar :: String
-ar = "\x1f4a5"
+ar = "\x1f4a5" -- Danger
 
 hi :: String
-hi = "\x2728"
+hi = "\x2728" -- Feature
 
 fw :: String
-fw = "\x1f98b"
+fw = "\x1f98b" -- Grace
 
 su :: String
-su = "❔"
+su = "❔" -- Doubt
 
 -- | Command line options definition.
 settingsP :: Parser Settings
