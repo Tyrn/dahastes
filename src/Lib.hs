@@ -13,14 +13,12 @@ module Lib (
 import Control.Foldl qualified as FL
 import Control.Monad.Extra
 import Data.Char (toUpper)
-import Data.Either.Extra
 import Data.IORef
 import Data.List (sortBy)
 import Data.Maybe
 import Data.Monoid
 import Data.String.Interpolate (i)
 import Data.Text qualified as T
-import Filesystem.Path.CurrentOS qualified as FPS
 import Initials
 import Sound.HTagLib
 import System.IO hiding (stderr, stdout)
@@ -305,11 +303,11 @@ setTagsToCopy args trackNum file
 (good until deprecated system-filepath removed).
 -}
 strp :: FilePath -> String
-strp path = T.unpack $ fromRight "" (FPS.toText $ FPS.fromText (T.pack path))
+strp = id
 
 -- | Constructs FilePath.
 wrap :: String -> FilePath
-wrap = fromString
+wrap = id
 
 -- | Returns base name plain or dotted
 baseName :: FilePath -> FilePath
