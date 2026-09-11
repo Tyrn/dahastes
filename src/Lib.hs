@@ -226,10 +226,21 @@ copyAlbum args = do
   let execDst = dst </> if sDropDst args then "" else baseDst
 
   if sDropDst args
-    then return ()
-    else mkdir execDst
-
-  traverseAlbum args execDst total totWidth counter src
+    then traverseAlbum args execDst total totWidth counter src
+    else do
+      exists <- testdir execDst
+      if exists
+        then
+          if sOverwrite args
+            then do
+              rmtree execDst
+              mkdir execDst
+              traverseAlbum args execDst total totWidth counter src
+            else
+              printf "Destination directory \"%s\" already exists\n" execDst
+        else do
+          mkdir execDst
+          traverseAlbum args execDst total totWidth counter src
 
 {- Counter, mostly global -}
 
