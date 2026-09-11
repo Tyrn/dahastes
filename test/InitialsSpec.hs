@@ -7,7 +7,7 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
-  describe "splinOnDots" $ do
+  describe "splitOnDots" $ do
     it "works" $ do
       splitOnDots "a . .. b c" `shouldBe` ["a", "b", "c"]
   describe "collectQuotedSubstrings" $ do
@@ -28,7 +28,7 @@ spec = do
       removeQuotedSubstrings "Arleigh\"31-knot\"Burke" `shouldBe` "Arleigh Burke"
       removeQuotedSubstrings "\"Bing\"Crosby, Kris\"Tanto\"Paronto" `shouldBe` " Crosby, Kris Paronto"
       removeQuotedSubstrings "\"Bing\"Crosby, Kris\"Tanto Paronto" `shouldBe` " Crosby, Kris Tanto Paronto"
-  describe "Join miscellany" $ do
+  describe "isSomeText" $ do
     it "works" $ do
       isSomeText "" `shouldBe` False
       isSomeText "z" `shouldBe` True
