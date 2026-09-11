@@ -34,11 +34,12 @@ common common-options
 library
   import:          common-options
   hs-source-dirs:  src
-  exposed-modules: Lib, Initials
+  exposed-modules: Lib, Initials, PathUtils
   build-depends:
     , containers
     , mtl
     , extra
+    , filepath
     , turtle
     , doctest
     , regex-base

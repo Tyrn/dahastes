@@ -23,11 +23,11 @@ import Data.Text qualified as T
 import Filesystem.Path.CurrentOS qualified as FPS
 import Initials
 import Sound.HTagLib
-import System.IO hiding (FilePath, stderr, stdout)
+import System.IO hiding (stderr, stdout)
 import Text.Printf
 import Text.Regex.TDFA
 import Turtle hiding (find, printf, sortBy, stderr, stdout)
-import Prelude hiding (FilePath)
+import Prelude
 
 {- Command line parser -}
 
