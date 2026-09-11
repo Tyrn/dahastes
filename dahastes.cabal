@@ -72,10 +72,12 @@ test-suite dahastes-test
   type:           exitcode-stdio-1.0
   hs-source-dirs: test
   main-is:        Spec.hs
+  other-modules:  InitialsSpec, MiscSpec, PathUtilsSpec
   build-depends:
     , hspec
     , text
     , regex-tdfa
+    , filepath
     , HUnit
     , dahastes
     , QuickCheck
