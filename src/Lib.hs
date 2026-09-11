@@ -189,6 +189,18 @@ traverseFlatDstR args dstRoot total totw counter srcDir = do
   mapM_ (copyFile args dstRoot total totw counter "") files
   mapM_ (traverseFlatDstR args dstRoot total totw counter) dirs
 
+-- | Fires the files into the already existing destination directory.
+traverseAlbum :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> IO ()
+traverseAlbum args execDst total totWidth counter src = do
+  putHeader args
+  if sTreeDst args
+    then traverseTreeDst args execDst total totWidth counter "" src
+    else
+      if sReverse args
+        then traverseFlatDstR args execDst total totWidth counter src
+        else traverseFlatDst args execDst total totWidth counter src
+  putFooter args total
+
 -- | Copies the album.
 copyAlbum :: Settings -> IO ()
 copyAlbum args = do
@@ -217,14 +229,7 @@ copyAlbum args = do
     then return ()
     else mkdir execDst
 
-  putHeader args
-  if sTreeDst args
-    then traverseTreeDst args execDst total totWidth counter "" src
-    else
-      if sReverse args
-        then traverseFlatDstR args execDst total totWidth counter src
-        else traverseFlatDst args execDst total totWidth counter src
-  putFooter args total
+  traverseAlbum args execDst total totWidth counter src
 
 {- Counter, mostly global -}
 
