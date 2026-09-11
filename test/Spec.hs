@@ -2,7 +2,6 @@
 
 import InitialsSpec qualified
 import MiscSpec qualified
-
 import PathUtilsSpec qualified
 import Test.Hspec
 
