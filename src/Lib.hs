@@ -113,7 +113,7 @@ listTree args = do
 -- Builds compare function according to options (for listDir only)
 makeCompare :: Settings -> (FilePath -> FilePath -> Ordering)
 makeCompare args =
-  let path = strp . dropExtension
+  let path = dropExtension
       cmp =
         if sSortLex args
           then \xx y -> compare (path xx) (path y)
@@ -146,7 +146,7 @@ shapeDst args dstRoot totw n dstStep srcFile =
           else zeroPad n totw <> "-"
       name = case sUnifiedName args of
         Just uName -> T.unpack uName <> " - " <> artistPrefix args
-        Nothing -> strp $ baseName srcFile
+        Nothing -> baseName srcFile
       ext = case extension srcFile of
         Just extn -> "." <> extn
         Nothing -> ""
@@ -180,13 +180,13 @@ traverseFlatDst :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> 
 traverseFlatDst args dstRoot total totw counter srcDir = do
   (dirs, files) <- listDir args srcDir
   mapM_ (traverseFlatDst args dstRoot total totw counter) dirs
-  mapM_ (copyFile args dstRoot total totw counter (wrap "")) files
+  mapM_ (copyFile args dstRoot total totw counter "") files
 
 -- | Walks the source tree backwards.
 traverseFlatDstR :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> IO ()
 traverseFlatDstR args dstRoot total totw counter srcDir = do
   (dirs, files) <- listDir args srcDir
-  mapM_ (copyFile args dstRoot total totw counter (wrap "")) files
+  mapM_ (copyFile args dstRoot total totw counter "") files
   mapM_ (traverseFlatDstR args dstRoot total totw counter) dirs
 
 -- | Copies the album.
@@ -206,13 +206,12 @@ copyAlbum args = do
         Nothing -> ""
   let baseDst = case sUnifiedName args of
         Just uname ->
-          wrap $
-            albumNum
-              <> artistPrefix args
-              <> " - "
-              <> T.unpack uname
-        Nothing -> wrap $ albumNum <> strp srcName
-  let execDst = dst </> if sDropDst args then wrap "" else baseDst
+          albumNum
+            <> artistPrefix args
+            <> " - "
+            <> T.unpack uname
+        Nothing -> albumNum <> srcName
+  let execDst = dst </> if sDropDst args then "" else baseDst
 
   if sDropDst args
     then return ()
@@ -220,7 +219,7 @@ copyAlbum args = do
 
   putHeader args
   if sTreeDst args
-    then traverseTreeDst args execDst total totWidth counter (wrap "") src
+    then traverseTreeDst args execDst total totWidth counter "" src
     else
       if sReverse args
         then traverseFlatDstR args execDst total totWidth counter src
@@ -285,8 +284,8 @@ setTagsToCopy args trackNum file
           <> track
   | otherwise = return ()
  where
-  st = setTags (strp file) Nothing
-  tt = shapeTitle args trackNum (strp $ baseName file)
+  st = setTags file Nothing
+  tt = shapeTitle args trackNum (baseName file)
   artist = fromMaybe "*" (sArtistTag args)
   album = case sUnifiedName args of
     Just uname -> uname
@@ -298,16 +297,6 @@ setTagsToCopy args trackNum file
       else trackNumberSetter (mkTrackNumber trackNum)
 
 {- FilePath helpers -}
-
-{- | Extracts String From FilePath
-(good until deprecated system-filepath removed).
--}
-strp :: FilePath -> String
-strp = id
-
--- | Constructs FilePath.
-wrap :: String -> FilePath
-wrap = id
 
 -- | Returns base name plain or dotted
 baseName :: FilePath -> FilePath
@@ -390,7 +379,7 @@ putCopy args total totw n dstFile = do
   if sVerbose args
     then
       let fmt = "%" <> printf "%d" totw <> [i|d#{fw}%d %s\n|]
-       in putStr (printf fmt n total (strp dstFile))
+       in putStr (printf fmt n total dstFile)
     else putStr "."
 
 -- | Prints the footer of the output to the console.
