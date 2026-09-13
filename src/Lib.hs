@@ -72,23 +72,23 @@ settingsP =
   Settings
     <$> switch "verbose" 'v' [i|#{hi} Unless verbose, just progress bar is shown|]
     <*> switch "version" 'V' "Show the version and exit"
-    <*> switch "droptracknumber" 'd' "Do not set track numbers"
-    <*> switch "stripdecorations" 's' "Strip file and directory name decorations"
-    <*> switch "filetitle" 'f' "Use file name for title tag"
-    <*> switch "filetitlenum" 'F' "Use numbered file name for title tag"
-    <*> switch "sortlex" 'x' "Sort files lexicographically"
-    <*> switch "treedst" 't' "Retain the tree structure of the source album at destination"
-    <*> switch "dropdst" 'p' "Do not create destination directory"
-    <*> switch "rev" 'r' "Copy files in reverse order (number one file is the last to be copied)"
+    <*> switch "drop-tracknumber" 'd' "Do not set track numbers"
+    <*> switch "strip-decorations" 's' "Strip file and directory name decorations"
+    <*> switch "file-title" 'f' "Use file name for title tag"
+    <*> switch "file-title-num" 'F' "Use numbered file name for title tag"
+    <*> switch "sort-lex" 'x' "Sort files lexicographically"
+    <*> switch "tree-dst" 't' "Retain the tree structure of the source album at destination"
+    <*> switch "drop-dst" 'p' "Do not create destination directory"
+    <*> switch "reverse" 'r' "Copy files in reverse order (number one file is the last to be copied)"
     <*> switch "overwrite" 'w' [i|#{ar} Silently remove existing destination directory|]
-    <*> switch "dryrun" 'y' "Without writing; trumps -w, too"
+    <*> switch "dry-run" 'y' "Without writing; trumps -w, too"
     <*> switch "count" 'c' "Just count the files"
-    <*> optional (optText "filetype" 'e' "Accept only audio files of the specified type")
-    <*> switch "prependsubdirname" 'i' "Prepend current subdirectory name to a file name"
-    <*> optional (optText "unifiedname" 'u' [i|#{hi} Base name for everything, except for the "Artist" tag|])
-    <*> optional (optInt "albumnum" 'b' "Add album number to destination")
-    <*> optional (optText "artisttag" 'a' [i|#{hi} "Artist" tag|])
-    <*> optional (optText "albumtag" 'm' [i|#{hi} "Album" tag|])
+    <*> optional (optText "file-type" 'e' "Accept only audio files of the specified type")
+    <*> switch "prepend-subdir-name" 'i' "Prepend current subdirectory name to a file name"
+    <*> optional (optText "unified-name" 'u' [i|#{hi} Base name for everything, except for the "Artist" tag|])
+    <*> optional (optInt "album-num" 'b' "Add album number to destination")
+    <*> optional (optText "artist" 'a' [i|#{hi} "Artist" tag|])
+    <*> optional (optText "album" 'm' [i|#{hi} "Album" tag|])
     <*> argPath "src" "Source directory"
     <*> argPath "dst" "Destination directory"
 
