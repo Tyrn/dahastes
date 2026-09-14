@@ -19,7 +19,9 @@ import Data.Maybe
 import Data.Monoid
 import Data.String.Interpolate (i)
 import Data.Text qualified as T
+import Data.Version (showVersion)
 import Initials
+import Paths_dahastes (version)
 import Sound.HTagLib
 import System.IO hiding (stderr, stdout)
 import Text.Printf
@@ -204,6 +206,12 @@ traverseAlbum args execDst total totWidth counter src = do
 -- | Copies the album.
 copyAlbum :: Settings -> IO ()
 copyAlbum args = do
+  if sVersion args
+    then do
+      printf "%s\n" (showVersion version)
+      exit ExitSuccess
+    else return ()
+
   checkTree <- listTree args
 
   dst <- realpath (sDst args)
