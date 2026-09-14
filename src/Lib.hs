@@ -12,6 +12,7 @@ module Lib (
 ) where
 
 import Control.Foldl qualified as FL
+
 import Control.Monad.Extra
 import Data.Char (toUpper)
 import Data.IORef
@@ -24,7 +25,10 @@ import Data.Version (showVersion)
 import Initials
 import Paths_dahastes (version)
 import Sound.HTagLib
+import System.Directory.OsPath.Streaming (getDirectoryContentsRecursive)
 import System.IO hiding (stderr, stdout)
+import System.OsPath qualified as OsPath
+import System.PosixCompat.Files qualified as Posix
 import Text.Printf
 import Text.Regex.TDFA
 import Turtle hiding (find, printf, sortBy, stderr, stdout)
@@ -214,6 +218,13 @@ copyAlbum args = do
   counter <- makeCounter
   src <- realpath (sSrc args)
 
+  if sCount args
+    then do
+      (cnt, size) <- audioFilesCount args src
+      printf "Files: %d, total size: %s\n" cnt (humanFine size)
+      exit ExitSuccess
+    else return ()
+
   let srcName = dirname src -- src HAS a trailing slash!
   let albumNum = case sAlbumNum args of
         Just num -> zeroPad num 2 <> "-"
@@ -243,6 +254,28 @@ copyAlbum args = do
         else do
           mkdir execDst
           traverseAlbum args execDst total totWidth counter src
+
+{- | Count audio files and sum their sizes recursively.
+Returns (count, totalBytes).
+-}
+audioFilesCount :: Settings -> FilePath -> IO (Integer, Integer)
+audioFilesCount args src = do
+  rootPath <- OsPath.encodeUtf src
+  entries <- getDirectoryContentsRecursive rootPath
+  foldM (step rootPath) (0, 0) entries
+ where
+  step rootPath (cnt, total) (entryPath, _fileType) = do
+    let fullPath = rootPath OsPath.</> entryPath
+    path <- OsPath.decodeUtf fullPath
+    if isAudioFile args path
+      then do
+        status <- Posix.getFileStatus path
+        let size = fromIntegral (Posix.fileSize status) :: Integer
+        return (cnt + 1, total + size)
+      else return (cnt, total)
+
+-- On Windows, use System.Directory:
+-- getFileSize = System.Directory.getFileSize
 
 {- Counter, mostly global -}
 

@@ -41,6 +41,8 @@ library
     , mtl
     , extra
     , filepath
+    , unix-compat
+    , directory-ospath-streaming
     , turtle
     , doctest
     , regex-base
