@@ -4,6 +4,7 @@
 -- | Support for Procrustes SmArT utility (audio album builder).
 module Lib (
   cmpstrNaturally,
+  humanFine,
   Settings (..),
   description,
   settingsP,
@@ -382,6 +383,45 @@ cmpstrNaturally xx y =
         else compare xx y
 
 {- Console output -}
+
+{- | Human-readable byte count, nicely rounded.
+
+>>> humanFine 42
+"42"
+>>> humanFine 1800
+"2kB"
+>>> humanFine 123456789
+"117.7MB"
+-}
+humanFine :: Integer -> String
+humanFine bytes
+  | bytes > 1 =
+      let trueExp = integerLogBase 1024 bytes
+          unitIdx = min trueExp (length unitList - 1)
+          quotient = fromIntegral bytes / (1024 ^ unitIdx :: Double)
+          (unitName, numDecimals) = unitList !! unitIdx
+       in printf ("%." ++ show numDecimals ++ "f%s") quotient unitName
+  | bytes == 0 = "0"
+  | bytes == 1 = "1"
+  | otherwise = "humanFine error; bytes: " ++ show bytes
+ where
+  unitList :: [(String, Int)]
+  unitList =
+    [ ("", 0)
+    , ("kB", 0)
+    , ("MB", 1)
+    , ("GB", 2)
+    , ("TB", 2)
+    , ("PB", 2)
+    , ("EB", 2)
+    , ("ZB", 2)
+    , ("YB", 2)
+    ]
+
+  integerLogBase :: Integer -> Integer -> Int
+  integerLogBase b n
+    | n < b = 0
+    | otherwise = 1 + integerLogBase b (n `div` b)
 
 -- | Prints the header of the output to the console.
 putHeader :: Settings -> IO ()
