@@ -19,7 +19,9 @@ import Data.Maybe
 import Data.Monoid
 import Data.String.Interpolate (i)
 import Data.Text qualified as T
+import Data.Version (showVersion)
 import Initials
+import Paths_dahastes (version)
 import Sound.HTagLib
 import System.IO hiding (stderr, stdout)
 import Text.Printf
@@ -32,8 +34,7 @@ import Prelude
 -- | Represents command line options.
 data Settings = Settings
   { sVerbose :: !Bool
-  , -- , sVersion :: !Bool
-    sDropTracknumber :: !Bool
+  , sDropTracknumber :: !Bool
   , sStripDecorations :: !Bool
   , sFileTitle :: !Bool
   , sFileTitleNum :: !Bool
@@ -71,7 +72,6 @@ settingsP :: Parser Settings
 settingsP =
   Settings
     <$> switch "verbose" 'v' [i|#{hi} Unless verbose, just progress bar is shown|]
-    -- <*> switch "version" 'V' "Show the version and exit"
     <*> switch "drop-tracknumber" 'd' "Do not set track numbers"
     <*> switch "strip-decorations" 's' "Strip file and directory name decorations"
     <*> switch "file-title" 'f' "Use file name for title tag"
@@ -102,7 +102,8 @@ description =
   number. Tag "Track Number" is set, tags "Title", "Artist", and "Album" can be replaced
   optionally. The writing process is strictly sequential: either starting with the number
   one file, or in the reversed order. This can be important for some mobile devices.
-  #{hi} Really useful options. #{su} Suspicious media.|]
+  #{hi} Really useful options. #{su} Suspicious media.
+  v#{showVersion version}|]
 
 -- | Serves the list of all audio files in the source directory.
 listTree :: Settings -> IO [FilePath]
