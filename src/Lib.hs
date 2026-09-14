@@ -19,9 +19,7 @@ import Data.Maybe
 import Data.Monoid
 import Data.String.Interpolate (i)
 import Data.Text qualified as T
-import Data.Version (showVersion)
 import Initials
-import Paths_dahastes (version)
 import Sound.HTagLib
 import System.IO hiding (stderr, stdout)
 import Text.Printf
@@ -34,8 +32,8 @@ import Prelude
 -- | Represents command line options.
 data Settings = Settings
   { sVerbose :: !Bool
-  , sVersion :: !Bool
-  , sDropTracknumber :: !Bool
+  , -- , sVersion :: !Bool
+    sDropTracknumber :: !Bool
   , sStripDecorations :: !Bool
   , sFileTitle :: !Bool
   , sFileTitleNum :: !Bool
@@ -73,7 +71,7 @@ settingsP :: Parser Settings
 settingsP =
   Settings
     <$> switch "verbose" 'v' [i|#{hi} Unless verbose, just progress bar is shown|]
-    <*> switch "version" 'V' "Show the version and exit"
+    -- <*> switch "version" 'V' "Show the version and exit"
     <*> switch "drop-tracknumber" 'd' "Do not set track numbers"
     <*> switch "strip-decorations" 's' "Strip file and directory name decorations"
     <*> switch "file-title" 'f' "Use file name for title tag"
@@ -206,12 +204,6 @@ traverseAlbum args execDst total totWidth counter src = do
 -- | Copies the album.
 copyAlbum :: Settings -> IO ()
 copyAlbum args = do
-  if sVersion args
-    then do
-      printf "%s\n" (showVersion version)
-      exit ExitSuccess
-    else return ()
-
   checkTree <- listTree args
 
   dst <- realpath (sDst args)

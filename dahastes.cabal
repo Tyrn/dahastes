@@ -42,6 +42,7 @@ library
     , extra
     , filepath
     , turtle
+    , optparse-applicative
     , doctest
     , regex-base
     , regex-tdfa
@@ -60,9 +61,11 @@ executable dahastes
   import:         common-options
   hs-source-dirs: app
   main-is:        Main.hs
+  other-modules:  Paths_dahastes
   build-depends:
     , dahastes
     , turtle
+    , optparse-applicative
     , text
     , foldl
     , extra
