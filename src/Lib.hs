@@ -110,13 +110,36 @@ description =
   #{hi} Really useful options. #{su} Suspicious media.
   v#{showVersion version}|]
 
--- | Serves the list of all audio files in the source directory.
-listTree :: Settings -> IO [FilePath]
-listTree args = do
-  lst <- fold (lstree (sSrc args)) FL.list
-  return $ filter (isAudioFile args) lst
+{- | Counts audio files and sums their sizes recursively.
+Returns (count, totalBytes).
+-}
+treeCount :: Settings -> IO (Int, Integer)
+treeCount args = do
+  src <- realpath (sSrc args)
+  rootPath <- OsPath.encodeUtf src
+  entries <- getDirectoryContentsRecursive rootPath
+  foldM (step rootPath) (0, 0) entries
+ where
+  step rootPath (cnt, total) (entryPath, _fileType) = do
+    let fullPath = rootPath OsPath.</> entryPath
+    path <- OsPath.decodeUtf fullPath
+    if isAudioFile args path
+      then do
+        status <- Posix.getFileStatus path
+        let size = fromIntegral (Posix.fileSize status) :: Integer
+        return (cnt + 1, total + size)
+      else return (cnt, total)
 
--- Builds compare function according to options (for listDir only)
+-- On Windows, use System.Directory:
+-- getFileSize = System.Directory.getFileSize
+
+-- -- | Serves the list of all audio files in the source directory.
+-- treeList :: Settings -> IO [FilePath]
+-- treeList args = do
+--   lst <- fold (lstree (sSrc args)) FL.list
+--   return $ filter (isAudioFile args) lst
+
+-- Builds compare function according to options (for dirList only)
 makeCompare :: Settings -> (FilePath -> FilePath -> Ordering)
 makeCompare args =
   let path = dropExtension
@@ -131,8 +154,8 @@ makeCompare args =
 {- | Serves the list of directories and the list of audio files
 of a given parent directory (immediate offspring).
 -}
-listDir :: Settings -> FilePath -> IO ([FilePath], [FilePath])
-listDir args src = do
+dirList :: Settings -> FilePath -> IO ([FilePath], [FilePath])
+dirList args src = do
   let cmp = makeCompare args
   list <- fold (ls src) FL.list
   (dirs, files) <- partitionM testdir list
@@ -171,7 +194,7 @@ copyFile args dstRoot total totw counter dstStep srcFile = do
 -- | Walks the source tree, recreates source tree at destination.
 traverseTreeDst :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> IO ()
 traverseTreeDst args dstRoot total totw counter dstStep srcDir = do
-  (dirs, files) <- listDir args srcDir
+  (dirs, files) <- dirList args srcDir
 
   let walk dir = do
         let step = dstStep </> filename dir -- dir has NO trailing slash!
@@ -184,14 +207,14 @@ traverseTreeDst args dstRoot total totw counter dstStep srcDir = do
 -- | Walks the source tree.
 traverseFlatDst :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> IO ()
 traverseFlatDst args dstRoot total totw counter srcDir = do
-  (dirs, files) <- listDir args srcDir
+  (dirs, files) <- dirList args srcDir
   mapM_ (traverseFlatDst args dstRoot total totw counter) dirs
   mapM_ (copyFile args dstRoot total totw counter "") files
 
 -- | Walks the source tree backwards.
 traverseFlatDstR :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> IO ()
 traverseFlatDstR args dstRoot total totw counter srcDir = do
-  (dirs, files) <- listDir args srcDir
+  (dirs, files) <- dirList args srcDir
   mapM_ (copyFile args dstRoot total totw counter "") files
   mapM_ (traverseFlatDstR args dstRoot total totw counter) dirs
 
@@ -210,18 +233,17 @@ traverseAlbum args execDst total totWidth counter src = do
 -- | Copies the album.
 copyAlbum :: Settings -> IO ()
 copyAlbum args = do
-  checkTree <- listTree args
+  (total, byteCount) <- treeCount args
 
-  dst <- realpath (sDst args)
-  let total = length checkTree
   let totWidth = length $ show total
   counter <- makeCounter
+
   src <- realpath (sSrc args)
+  dst <- realpath (sDst args)
 
   if sCount args
     then do
-      (cnt, size) <- audioFilesCount args src
-      printf "Files: %d, total size: %s\n" cnt (humanFine size)
+      printf "Files: %d, total size: %s\n" total (humanFine byteCount)
       exit ExitSuccess
     else return ()
 
@@ -254,28 +276,6 @@ copyAlbum args = do
         else do
           mkdir execDst
           traverseAlbum args execDst total totWidth counter src
-
-{- | Count audio files and sum their sizes recursively.
-Returns (count, totalBytes).
--}
-audioFilesCount :: Settings -> FilePath -> IO (Integer, Integer)
-audioFilesCount args src = do
-  rootPath <- OsPath.encodeUtf src
-  entries <- getDirectoryContentsRecursive rootPath
-  foldM (step rootPath) (0, 0) entries
- where
-  step rootPath (cnt, total) (entryPath, _fileType) = do
-    let fullPath = rootPath OsPath.</> entryPath
-    path <- OsPath.decodeUtf fullPath
-    if isAudioFile args path
-      then do
-        status <- Posix.getFileStatus path
-        let size = fromIntegral (Posix.fileSize status) :: Integer
-        return (cnt + 1, total + size)
-      else return (cnt, total)
-
--- On Windows, use System.Directory:
--- getFileSize = System.Directory.getFileSize
 
 {- Counter, mostly global -}
 
