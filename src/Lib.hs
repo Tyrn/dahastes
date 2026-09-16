@@ -365,7 +365,7 @@ isAudioFile args file =
  where
   checkList = case sFileType args of
     Just ftype -> [dropWhile (== '.') (T.unpack $ T.toUpper ftype)]
-    Nothing -> ["MP3", "M4A", "M4B", "OGG", "WMA", "FLAC"]
+    Nothing -> ["MP3", "M4A", "M4B", "OGG", "WMA", "FLAC", "OPUS", "APE", "WAV"]
 
 {- | Returns a zero-padded numeric literal.
 
