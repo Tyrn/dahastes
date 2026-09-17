@@ -133,11 +133,11 @@ treeCount args = do
 -- On Windows, use System.Directory:
 -- getFileSize = System.Directory.getFileSize
 
--- -- | Serves the list of all audio files in the source directory.
--- treeList :: Settings -> IO [FilePath]
--- treeList args = do
---   lst <- fold (lstree (sSrc args)) FL.list
---   return $ filter (isAudioFile args) lst
+-- | Serves the list of all audio files in the source directory.
+_treeList :: Settings -> IO [FilePath]
+_treeList args = do
+  lst <- fold (lstree (sSrc args)) FL.list
+  return $ filter (isAudioFile args) lst
 
 -- Builds compare function according to options (for dirList only)
 makeCompare :: Settings -> (FilePath -> FilePath -> Ordering)
