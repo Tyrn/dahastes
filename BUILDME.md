@@ -1,11 +1,31 @@
-# dahastes
+# Dahastes a.k.a. Procrustes
 
 [![dahastes on hackage](https://img.shields.io/hackage/v/dahastes)](http://hackage.haskell.org/package/dahastes)
 [![dahastes on Stackage Nightly](https://stackage.org/package/dahastes/badge/nightly)](https://stackage.org/nightly/package/dahastes)
 
 Generated with [template-haskell](https://github.com/jonascarpay/template-haskell)
 
+## Books
+
+- A&M, notes and exercises
+
+  - [mvaldesdeleon](https://github.com/mvaldesdeleon/haskell-book)
+  - [joanllenas](https://github.com/joanllenas/haskell-exercises)
+  - [BoeingX](https://github.com/BoeingX/haskell-programming-from-first-principles)
+  - [johnchandlerburnham](https://github.com/johnchandlerburnham/hpfp)
+  - [glebec](https://github.com/glebec/haskell-programming-allen-moronuki)
+  - [dwayne](https://github.com/dwayne/haskell-programming)
+  - [parry84](https://github.com/parry84/haskell-book)
+  - [pushcx](https://github.com/pushcx/hpffp-resources)
+  - [gvolpe](https://github.com/gvolpe/haskell-book-exercises)
+  - [scarvalhojr](https://github.com/scarvalhojr/haskellbook)
+  - [xnning](https://github.com/xnning/haskell-programming-from-first-principles)
+
+## Notes
+
 - [Install tools](https://github.com/Tyrn/dotfiles/blob/main/messy-notes/Haskell.md) (GHCup)
+
+## Howto
 
 - Build and install (as of 2026-08-11 GHC 9.10.3)
 
