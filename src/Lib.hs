@@ -100,7 +100,7 @@ settingsP =
 -- | Utility description (help screen header).
 description :: Description
 description =
-  [i|  Dahastes a.k.a. Damastes SmArT is a CLI utility for copying subtrees containing
+  [i|  Dahastes a.k.a. Procrustes SmArT is a CLI utility for copying subtrees containing
   supported audio files in sequence, naturally sorted. The end result is a flattened copy
   of the source subtree. "Flattened" means that only a namesake of the root source
   directory is created, where all the files get copied to, names prefixed with a serial

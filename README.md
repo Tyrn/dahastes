@@ -1,4 +1,4 @@
-# Dahastes a.k.a. Damastes
+# Dahastes a.k.a. Procrustes
 
 [![dahastes on hackage](https://img.shields.io/hackage/v/dahastes)](http://hackage.haskell.org/package/dahastes)
 [![dahastes on Stackage Nightly](https://stackage.org/package/dahastes/badge/nightly)](https://stackage.org/nightly/package/dahastes)
@@ -98,13 +98,6 @@ $ dahastes [<options>] <source directory> <destination directory>
 | `-a, --artist TEXT`         | _artist tag_                                                                                                              |
 | `-m, --album TEXT`          | _album tag_                                                                                                               |
 | `-b, --album-num INTEGER`   | _0..99; prepend_ `INTEGER` _to the destination root directory name_                                                       |
-
-Hidden options:
-
-| Option         | Description                                       |
-| -------------- | ------------------------------------------------- |
-| `--context`    | _print clean context_, `$ dahastes --context . .` |
-| `--no-console` | _no console mode_                                 |
 
 ## Examples
 
