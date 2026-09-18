@@ -172,14 +172,19 @@ shapeDst args dstRoot totw n dstStep srcFile =
   let prefx =
         if sStripDecorations args && isNothing (sUnifiedName args)
           then ""
-          else zeroPad n totw <> "-"
+          else
+            zeroPad n totw
+              <> "-"
+              <> if sPrependSubdirName args && length dstStep > 0
+                then "[" <> concatMap (\c -> if c == '/' then "][" else [c]) dstStep <> "]-"
+                else ""
       name = case sUnifiedName args of
         Just uName -> T.unpack uName <> " - " <> artistPrefix args
         Nothing -> baseName srcFile
       ext = case extension srcFile of
         Just extn -> "." <> extn
         Nothing -> ""
-   in dstRoot </> dstStep </> fromString (prefx <> name <> ext)
+   in dstRoot </> if sTreeDst args then dstStep else "" </> fromString (prefx <> name <> ext)
 
 -- | Makes one copy from source to destination directory.
 copyFile :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> IO ()
@@ -205,18 +210,28 @@ traverseTreeDst args dstRoot total totw counter dstStep srcDir = do
   mapM_ (copyFile args dstRoot total totw counter dstStep) files
 
 -- | Walks the source tree.
-traverseFlatDst :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> IO ()
-traverseFlatDst args dstRoot total totw counter srcDir = do
+traverseFlatDst :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> IO ()
+traverseFlatDst args dstRoot total totw counter dstStep srcDir = do
   (dirs, files) <- dirList args srcDir
-  mapM_ (traverseFlatDst args dstRoot total totw counter) dirs
-  mapM_ (copyFile args dstRoot total totw counter "") files
+
+  let walk dir = do
+        let step = dstStep </> filename dir
+        traverseFlatDst args dstRoot total totw counter step dir
+
+  mapM_ walk dirs
+  mapM_ (copyFile args dstRoot total totw counter dstStep) files
 
 -- | Walks the source tree backwards.
-traverseFlatDstR :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> IO ()
-traverseFlatDstR args dstRoot total totw counter srcDir = do
+traverseFlatDstR :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> IO ()
+traverseFlatDstR args dstRoot total totw counter dstStep srcDir = do
   (dirs, files) <- dirList args srcDir
-  mapM_ (copyFile args dstRoot total totw counter "") files
-  mapM_ (traverseFlatDstR args dstRoot total totw counter) dirs
+
+  let walk dir = do
+        let step = dstStep </> filename dir
+        traverseFlatDstR args dstRoot total totw counter step dir
+
+  mapM_ (copyFile args dstRoot total totw counter dstStep) files
+  mapM_ walk dirs
 
 -- | Fires the files into the already existing destination directory.
 traverseAlbum :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> IO ()
@@ -226,8 +241,8 @@ traverseAlbum args execDst total totWidth counter src = do
     then traverseTreeDst args execDst total totWidth counter "" src
     else
       if sReverse args
-        then traverseFlatDstR args execDst total totWidth counter src
-        else traverseFlatDst args execDst total totWidth counter src
+        then traverseFlatDstR args execDst total totWidth counter "" src
+        else traverseFlatDst args execDst total totWidth counter "" src
   putFooter args total
 
 -- | Copies the album.
