@@ -70,6 +70,9 @@ hi = "\x2728" -- Feature
 fw :: String
 fw = "\x1f98b" -- Grace
 
+tw :: String
+tw = "\x1fae5" -- Dry run
+
 su :: String
 su = "❔" -- Doubt
 
@@ -193,8 +196,9 @@ copyFile args dstRoot total totw counter dstStep srcFile = do
   next <- counter 1
   let n = if sReverse args then total - next + 1 else next
   let dst = shapeDst args dstRoot totw n dstStep srcFile
-  cp srcFile dst
-  setTagsToCopy args n dst
+  unless (sDryrun args) $ do
+    cp srcFile dst
+    setTagsToCopy args n dst
   putCopy args total totw n dst
 
 -- | Walks the source tree, recreates source tree at destination.
@@ -204,7 +208,7 @@ traverseTreeDst args dstRoot total totw counter dstStep srcDir = do
 
   let walk dir = do
         let step = dstStep </> filename dir -- dir has NO trailing slash!
-        mkdir (dstRoot </> step)
+        unless (sDryrun args) $ mkdir (dstRoot </> step)
         traverseTreeDst args dstRoot total totw counter step dir
 
   mapM_ walk dirs
@@ -302,13 +306,14 @@ copyAlbum args = do
         then
           if sOverwrite args
             then do
-              rmtree execDst
-              mkdir execDst
+              unless (sDryrun args) $ do
+                rmtree execDst
+                mkdir execDst
               traverseAlbum args execDst total totWidth counter src
             else
               printf "Destination directory \"%s\" already exists\n" execDst
         else do
-          mkdir execDst
+          unless (sDryrun args) $ mkdir execDst
           traverseAlbum args execDst total totWidth counter src
 
 {- Counter, mostly global -}
@@ -493,22 +498,25 @@ humanFine bytes
 -- | Prints the header of the output to the console.
 putHeader :: Settings -> IO ()
 putHeader args = do
-  if sVerbose args
+  if sVerbose args || sDryrun args
     then putStr ""
     else putStr "Start "
 
 -- | Prints a single file copy info to the console.
 putCopy :: Settings -> Int -> Int -> Int -> FilePath -> IO ()
 putCopy args total totw n dstFile = do
-  if sVerbose args
+  if sVerbose args || sDryrun args
     then
-      let fmt = "%" <> printf "%d" totw <> [i|d#{fw}%d %s\n|]
+      let fmt = "%" <> printf "%d" totw <> [i|d#{if sDryrun args then tw else fw}%d %s\n|]
        in putStr (printf fmt n total dstFile)
     else putStr "."
 
 -- | Prints the footer of the output to the console.
 putFooter :: Settings -> Int -> IO ()
 putFooter args total = do
-  if sVerbose args
-    then putStr (printf "Total of %d file(s) copied\n" total)
+  if sVerbose args || sDryrun args
+    then
+      if sDryrun args
+        then putStr (printf "Total of %d file(s) good to copy\n" total)
+        else putStr (printf "Total of %d file(s) copied\n" total)
     else putStr (printf " Done(%d)\n" total)
