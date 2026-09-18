@@ -114,6 +114,12 @@ description =
   #{hi} Really useful options. #{su} Suspicious media.
   v#{showVersion version}|]
 
+-- | Gets file size in bytes.
+fsize :: FilePath -> IO Integer
+fsize path = do
+  status <- Posix.getFileStatus path
+  return (fromIntegral (Posix.fileSize status))
+
 {- | Counts audio files and sums their sizes recursively.
 Returns (count, totalBytes).
 -}
@@ -129,8 +135,7 @@ treeCount args = do
     path <- OsPath.decodeUtf fullPath
     if isAudioFile args path
       then do
-        status <- Posix.getFileStatus path
-        let size = fromIntegral (Posix.fileSize status) :: Integer
+        size <- fsize path
         return (cnt + 1, total + size)
       else return (cnt, total)
 
@@ -199,7 +204,7 @@ copyFile args dstRoot total totw counter dstStep srcFile = do
   unless (sDryrun args) $ do
     cp srcFile dst
     setTagsToCopy args n dst
-  putCopy args total totw n dst
+  putCopy args total totw n srcFile dst
 
 -- | Walks the source tree, recreates source tree at destination.
 traverseTreeDst :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> IO ()
@@ -503,11 +508,17 @@ putHeader args = do
     else putStr "Start "
 
 -- | Prints a single file copy info to the console.
-putCopy :: Settings -> Int -> Int -> Int -> FilePath -> IO ()
-putCopy args total totw n dstFile = do
+putCopy :: Settings -> Int -> Int -> Int -> FilePath -> FilePath -> IO ()
+putCopy args total totw n srcFile dstFile = do
   if sVerbose args || sDryrun args
-    then
-      let fmt = "%" <> printf "%d" totw <> [i|d#{if sDryrun args then tw else fw}%d %s\n|]
+    then do
+      size <- fsize srcFile
+      let fmt =
+            "%"
+              <> printf "%d" totw
+              <> [i|d#{if sDryrun args then tw else fw}%d %s|]
+              <> (if sDryrun args then [i| ✓ #{humanFine size}|] else "")
+              <> "\n"
        in putStr (printf fmt n total dstFile)
     else putStr "."
 
