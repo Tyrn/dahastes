@@ -184,7 +184,7 @@ shapeDst args dstRoot totw n dstStep srcFile =
       ext = case extension srcFile of
         Just extn -> "." <> extn
         Nothing -> ""
-   in dstRoot </> if sTreeDst args then dstStep else "" </> fromString (prefx <> name <> ext)
+   in dstRoot </> (if sTreeDst args then dstStep else "") </> (prefx <> name <> ext)
 
 -- | Makes one copy from source to destination directory.
 copyFile :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> IO ()
