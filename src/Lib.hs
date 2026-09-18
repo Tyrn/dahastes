@@ -23,6 +23,7 @@ import Data.String.Interpolate (i)
 import Data.Text qualified as T
 import Data.Version (showVersion)
 import Initials
+import PathUtils (isRelativeTo)
 import Paths_dahastes (version)
 import Sound.HTagLib
 import System.Directory.OsPath.Streaming (getDirectoryContentsRecursive)
@@ -248,20 +249,38 @@ traverseAlbum args execDst total totWidth counter src = do
 -- | Copies the album.
 copyAlbum :: Settings -> IO ()
 copyAlbum args = do
-  (total, byteCount) <- treeCount args
-
-  let totWidth = length $ show total
-  counter <- makeCounter
-
   src <- realpath (sSrc args)
+
+  unlessM (testdir src) $ do
+    printf "Source directory \"%s\" does not exist\n" src
+    exit (ExitFailure 1)
+
+  (total, byteCount) <- treeCount args
+  let totWidth = length $ show total
+
+  when (total < 1) $ do
+    printf "No audio files discovered in the source directory\n"
+    exit ExitSuccess
+
+  when (sCount args) $ do
+    printf "Files: %d, total size: %s\n" total (humanFine byteCount)
+    exit ExitSuccess
+
   dst <- realpath (sDst args)
 
-  if sCount args
-    then do
-      printf "Files: %d, total size: %s\n" total (humanFine byteCount)
-      exit ExitSuccess
-    else return ()
+  unlessM (testdir dst) $ do
+    printf "Destination directory \"%s\" does not exist\n" dst
+    exit (ExitFailure 1)
 
+  when (dst `isRelativeTo` src) $ do
+    printf "Target directory \"%s\"\n" dst
+    printf "is inside source \"%s\"\n" src
+    exit (ExitFailure 1)
+
+  -- The global (line) counter
+  counter <- makeCounter
+  -- exists from now on.
+  --
   let srcName = dirname src -- src HAS a trailing slash!
   let albumNum = case sAlbumNum args of
         Just num -> zeroPad num 2 <> "-"
