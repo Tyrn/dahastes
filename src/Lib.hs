@@ -233,40 +233,43 @@ copyFile args dstRoot total totw counter dstStep srcFile = do
   putCopy args total totw n srcFile dst
 
 -- | Walks the source tree, recreates source tree at destination.
-traverseTreeDst :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> IO ()
-traverseTreeDst args dstRoot total totw counter dstStep srcDir = do
-  (dirs, files) <- dirList args srcDir
+traverseTreeDst :: FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> App ()
+traverseTreeDst dstRoot total totw counter dstStep srcDir = do
+  args <- asksSettings id
+  (dirs, files) <- liftIO $ dirList args srcDir
 
   let walk dir = do
         let step = dstStep </> filename dir
         unless (sDryrun args) $ mkdir (dstRoot </> step)
-        traverseTreeDst args dstRoot total totw counter step dir
+        traverseTreeDst dstRoot total totw counter step dir
 
   mapM_ walk dirs
-  mapM_ (copyFile args dstRoot total totw counter dstStep) files
+  mapM_ (liftIO . copyFile args dstRoot total totw counter dstStep) files
 
 -- | Walks the source tree.
-traverseFlatDst :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> IO ()
-traverseFlatDst args dstRoot total totw counter dstStep srcDir = do
-  (dirs, files) <- dirList args srcDir
+traverseFlatDst :: FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> App ()
+traverseFlatDst dstRoot total totw counter dstStep srcDir = do
+  args <- asksSettings id
+  (dirs, files) <- liftIO $ dirList args srcDir
 
   let walk dir = do
         let step = dstStep </> filename dir
-        traverseFlatDst args dstRoot total totw counter step dir
+        traverseFlatDst dstRoot total totw counter step dir
 
   mapM_ walk dirs
-  mapM_ (copyFile args dstRoot total totw counter dstStep) files
+  mapM_ (liftIO . copyFile args dstRoot total totw counter dstStep) files
 
 -- | Walks the source tree backwards.
-traverseFlatDstR :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> IO ()
-traverseFlatDstR args dstRoot total totw counter dstStep srcDir = do
-  (dirs, files) <- dirList args srcDir
+traverseFlatDstR :: FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> App ()
+traverseFlatDstR dstRoot total totw counter dstStep srcDir = do
+  args <- asksSettings id
+  (dirs, files) <- liftIO $ dirList args srcDir
 
   let walk dir = do
         let step = dstStep </> filename dir
-        traverseFlatDstR args dstRoot total totw counter step dir
+        traverseFlatDstR dstRoot total totw counter step dir
 
-  mapM_ (copyFile args dstRoot total totw counter dstStep) files
+  mapM_ (liftIO . copyFile args dstRoot total totw counter dstStep) files
   mapM_ walk dirs
 
 -- | Fires the files into the already existing destination directory.
@@ -276,11 +279,11 @@ traverseAlbum execDst total totWidth counter byteCount src = do
 
   liftIO $ putHeader args
   if sTreeDst args
-    then liftIO $ traverseTreeDst args execDst total totWidth counter "" src
+    then traverseTreeDst execDst total totWidth counter "" src
     else
       if sReverse args
-        then liftIO $ traverseFlatDstR args execDst total totWidth counter "" src
-        else liftIO $ traverseFlatDst args execDst total totWidth counter "" src
+        then traverseFlatDstR execDst total totWidth counter "" src
+        else traverseFlatDst execDst total totWidth counter "" src
   liftIO $ putFooter args total byteCount
 
 -- | Copies the album.
