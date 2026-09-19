@@ -12,6 +12,7 @@ module Lib (
   Ctx (..),
   App,
   makeCounter,
+  initialCtx,
 ) where
 
 import Control.Foldl qualified as FL
@@ -38,6 +39,32 @@ import Text.Printf
 import Text.Regex.TDFA
 import Turtle hiding (find, printf, sortBy, stderr, stdout)
 import Prelude
+
+{- ReaderT, which serves globally available objects -}
+
+data Ctx = Ctx
+  { ctxSettings :: Settings
+  , ctxCounter :: Counter
+  , ctxFileCount :: Int
+  , ctxByteCount :: Integer
+  , ctxFileCountWidth :: Int
+  }
+
+-- A starting context with zeroes (before treeCount runs):
+initialCtx :: Settings -> Counter -> Ctx
+initialCtx args counter =
+  Ctx
+    { ctxSettings = args
+    , ctxCounter = counter
+    , ctxFileCount = 0
+    , ctxByteCount = 0
+    , ctxFileCountWidth = 1
+    }
+
+type App = ReaderT Ctx IO
+
+asksSettings :: (Settings -> a) -> App a
+asksSettings entry = asks (entry . ctxSettings)
 
 {- Command line parser -}
 
@@ -120,19 +147,6 @@ description =
   one file, or in the reversed order. This can be important for some mobile devices.
   #{hi} Really useful options. #{su} Suspicious media.
   v#{showVersion version}|]
-
-data Ctx = Ctx
-  { ctxSettings :: Settings
-  , ctxCounter :: Counter
-  }
-
-type App = ReaderT Ctx IO
-
-asksSettings :: (Settings -> a) -> App a
-asksSettings entry = asks (entry . ctxSettings)
-
-_settings :: App Settings
-_settings = asks ctxSettings
 
 -- | Gets file size in bytes.
 fsize :: FilePath -> IO Integer
@@ -219,71 +233,73 @@ shapeDst args dstRoot totw n dstStep srcFile =
    in dstRoot </> (if sTreeDst args then dstStep else "") </> (prefx <> name <> ext)
 
 -- | Makes one copy from source to destination directory.
-copyFile :: FilePath -> Int -> Int -> FilePath -> FilePath -> App ()
-copyFile dstRoot total totw dstStep srcFile = do
+copyFile :: FilePath -> FilePath -> FilePath -> App ()
+copyFile dstRoot dstStep srcFile = do
   args <- asksSettings id
   counter <- asks ctxCounter
   next <- liftIO $ counter 1
+  total <- asks ctxFileCount
+  totw <- asks ctxFileCountWidth
   let n = if sReverse args then total - next + 1 else next
   let dst = shapeDst args dstRoot totw n dstStep srcFile
   unless (sDryrun args) $ do
     cp srcFile dst
     setTagsToCopy n dst
-  putCopy total totw n srcFile dst
+  putCopy n srcFile dst
 
 -- | Walks the source tree, recreates source tree at destination.
-traverseTreeDst :: FilePath -> Int -> Int -> FilePath -> FilePath -> App ()
-traverseTreeDst dstRoot total totw dstStep srcDir = do
+traverseTreeDst :: FilePath -> FilePath -> FilePath -> App ()
+traverseTreeDst dstRoot dstStep srcDir = do
   args <- asksSettings id
   (dirs, files) <- liftIO $ dirList args srcDir
 
   let walk dir = do
         let step = dstStep </> filename dir
         unless (sDryrun args) $ mkdir (dstRoot </> step)
-        traverseTreeDst dstRoot total totw step dir
+        traverseTreeDst dstRoot step dir
 
   mapM_ walk dirs
-  mapM_ (copyFile dstRoot total totw dstStep) files
+  mapM_ (copyFile dstRoot dstStep) files
 
 -- | Walks the source tree.
-traverseFlatDst :: FilePath -> Int -> Int -> FilePath -> FilePath -> App ()
-traverseFlatDst dstRoot total totw dstStep srcDir = do
+traverseFlatDst :: FilePath -> FilePath -> FilePath -> App ()
+traverseFlatDst dstRoot dstStep srcDir = do
   args <- asksSettings id
   (dirs, files) <- liftIO $ dirList args srcDir
 
   let walk dir = do
         let step = dstStep </> filename dir
-        traverseFlatDst dstRoot total totw step dir
+        traverseFlatDst dstRoot step dir
 
   mapM_ walk dirs
-  mapM_ (copyFile dstRoot total totw dstStep) files
+  mapM_ (copyFile dstRoot dstStep) files
 
 -- | Walks the source tree backwards.
-traverseFlatDstR :: FilePath -> Int -> Int -> FilePath -> FilePath -> App ()
-traverseFlatDstR dstRoot total totw dstStep srcDir = do
+traverseFlatDstR :: FilePath -> FilePath -> FilePath -> App ()
+traverseFlatDstR dstRoot dstStep srcDir = do
   args <- asksSettings id
   (dirs, files) <- liftIO $ dirList args srcDir
 
   let walk dir = do
         let step = dstStep </> filename dir
-        traverseFlatDstR dstRoot total totw step dir
+        traverseFlatDstR dstRoot step dir
 
-  mapM_ (copyFile dstRoot total totw dstStep) files
+  mapM_ (copyFile dstRoot dstStep) files
   mapM_ walk dirs
 
 -- | Fires the files into the already existing destination directory.
-traverseAlbum :: FilePath -> Int -> Int -> Integer -> FilePath -> App ()
-traverseAlbum execDst total totWidth byteCount src = do
+traverseAlbum :: FilePath -> FilePath -> App ()
+traverseAlbum execDst src = do
   args <- asksSettings id
 
   putHeader
   if sTreeDst args
-    then traverseTreeDst execDst total totWidth "" src
+    then traverseTreeDst execDst "" src
     else
       if sReverse args
-        then traverseFlatDstR execDst total totWidth "" src
-        else traverseFlatDst execDst total totWidth "" src
-  putFooter total byteCount
+        then traverseFlatDstR execDst "" src
+        else traverseFlatDst execDst "" src
+  putFooter
 
 -- | Copies the album.
 copyAlbum :: App ()
@@ -329,24 +345,32 @@ copyAlbum = do
             <> T.unpack uname
         Nothing -> albumNum <> srcName
       execDst = dst </> if sDropDst args then "" else baseDst
-
-  if sDropDst args
-    then traverseAlbum execDst fileCount fileCountWidth byteCount src
-    else do
-      exists <- testdir execDst
-      if exists
-        then
-          if sOverwrite args
-            then do
-              unless (sDryrun args) $ do
-                rmtree execDst
-                mkdir execDst
-              traverseAlbum execDst fileCount fileCountWidth byteCount src
-            else
-              liftIO $ printf "Destination directory \"%s\" already exists\n" execDst
-        else do
-          unless (sDryrun args) $ mkdir execDst
-          traverseAlbum execDst fileCount fileCountWidth byteCount src
+  let
+    -- Deferred Ctx initialization
+    extendCtx ctx =
+      ctx
+        { ctxFileCount = fileCount
+        , ctxByteCount = byteCount
+        , ctxFileCountWidth = fileCountWidth
+        }
+  local extendCtx $ do
+    if sDropDst args
+      then traverseAlbum execDst src
+      else do
+        exists <- testdir execDst
+        if exists
+          then
+            if sOverwrite args
+              then do
+                unless (sDryrun args) $ do
+                  rmtree execDst
+                  mkdir execDst
+                traverseAlbum execDst src
+              else
+                liftIO $ printf "Destination directory \"%s\" already exists\n" execDst
+          else do
+            unless (sDryrun args) $ mkdir execDst
+            traverseAlbum execDst src
 
 {- Counter, mostly global -}
 
@@ -542,9 +566,11 @@ putHeader = do
     else liftIO $ putStr "Start "
 
 -- | Prints a single file copy info to the console.
-putCopy :: Int -> Int -> Int -> FilePath -> FilePath -> App ()
-putCopy total totw n srcFile dstFile = do
+putCopy :: Int -> FilePath -> FilePath -> App ()
+putCopy n srcFile dstFile = do
   args <- asksSettings id
+  total <- asks ctxFileCount
+  totw <- asks ctxFileCountWidth
 
   if sVerbose args || sDryrun args
     then do
@@ -559,9 +585,11 @@ putCopy total totw n srcFile dstFile = do
     else liftIO $ putStr "."
 
 -- | Prints the footer of the output to the console.
-putFooter :: Int -> Integer -> App ()
-putFooter total byteCount = do
+putFooter :: App ()
+putFooter = do
   args <- asksSettings id
+  total <- asks ctxFileCount
+  byteCount <- asks ctxByteCount
   let bcount = humanFine byteCount
   if sVerbose args || sDryrun args
     then

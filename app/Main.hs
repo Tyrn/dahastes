@@ -12,4 +12,4 @@ main :: IO ()
 main = do
   args <- options description settingsP
   counter <- makeCounter
-  runReaderT copyAlbum (Ctx args counter)
+  runReaderT copyAlbum (initialCtx args counter)
