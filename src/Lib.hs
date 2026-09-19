@@ -232,57 +232,57 @@ copyFile dstRoot total totw dstStep srcFile = do
   putCopy total totw n srcFile dst
 
 -- | Walks the source tree, recreates source tree at destination.
-traverseTreeDst :: FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> App ()
-traverseTreeDst dstRoot total totw counter dstStep srcDir = do
+traverseTreeDst :: FilePath -> Int -> Int -> FilePath -> FilePath -> App ()
+traverseTreeDst dstRoot total totw dstStep srcDir = do
   args <- asksSettings id
   (dirs, files) <- liftIO $ dirList args srcDir
 
   let walk dir = do
         let step = dstStep </> filename dir
         unless (sDryrun args) $ mkdir (dstRoot </> step)
-        traverseTreeDst dstRoot total totw counter step dir
+        traverseTreeDst dstRoot total totw step dir
 
   mapM_ walk dirs
   mapM_ (copyFile dstRoot total totw dstStep) files
 
 -- | Walks the source tree.
-traverseFlatDst :: FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> App ()
-traverseFlatDst dstRoot total totw counter dstStep srcDir = do
+traverseFlatDst :: FilePath -> Int -> Int -> FilePath -> FilePath -> App ()
+traverseFlatDst dstRoot total totw dstStep srcDir = do
   args <- asksSettings id
   (dirs, files) <- liftIO $ dirList args srcDir
 
   let walk dir = do
         let step = dstStep </> filename dir
-        traverseFlatDst dstRoot total totw counter step dir
+        traverseFlatDst dstRoot total totw step dir
 
   mapM_ walk dirs
   mapM_ (copyFile dstRoot total totw dstStep) files
 
 -- | Walks the source tree backwards.
-traverseFlatDstR :: FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> App ()
-traverseFlatDstR dstRoot total totw counter dstStep srcDir = do
+traverseFlatDstR :: FilePath -> Int -> Int -> FilePath -> FilePath -> App ()
+traverseFlatDstR dstRoot total totw dstStep srcDir = do
   args <- asksSettings id
   (dirs, files) <- liftIO $ dirList args srcDir
 
   let walk dir = do
         let step = dstStep </> filename dir
-        traverseFlatDstR dstRoot total totw counter step dir
+        traverseFlatDstR dstRoot total totw step dir
 
   mapM_ (copyFile dstRoot total totw dstStep) files
   mapM_ walk dirs
 
 -- | Fires the files into the already existing destination directory.
-traverseAlbum :: FilePath -> Int -> Int -> Counter -> Integer -> FilePath -> App ()
-traverseAlbum execDst total totWidth counter byteCount src = do
+traverseAlbum :: FilePath -> Int -> Int -> Integer -> FilePath -> App ()
+traverseAlbum execDst total totWidth byteCount src = do
   args <- asksSettings id
 
   putHeader
   if sTreeDst args
-    then traverseTreeDst execDst total totWidth counter "" src
+    then traverseTreeDst execDst total totWidth "" src
     else
       if sReverse args
-        then traverseFlatDstR execDst total totWidth counter "" src
-        else traverseFlatDst execDst total totWidth counter "" src
+        then traverseFlatDstR execDst total totWidth "" src
+        else traverseFlatDst execDst total totWidth "" src
   putFooter total byteCount
 
 -- | Copies the album.
@@ -318,8 +318,6 @@ copyAlbum = do
     liftIO $ printf "is inside source \"%s\"\n" src
     exit (ExitFailure 1)
 
-  counter <- asks ctxCounter
-
   let srcName = basename src -- src must be a directory.
       albumNum = case sAlbumNum args of
         Just num -> zeroPad num 2 <> "-"
@@ -333,7 +331,7 @@ copyAlbum = do
       execDst = dst </> if sDropDst args then "" else baseDst
 
   if sDropDst args
-    then traverseAlbum execDst total totWidth counter byteCount src
+    then traverseAlbum execDst total totWidth byteCount src
     else do
       exists <- testdir execDst
       if exists
@@ -343,12 +341,12 @@ copyAlbum = do
               unless (sDryrun args) $ do
                 rmtree execDst
                 mkdir execDst
-              traverseAlbum execDst total totWidth counter byteCount src
+              traverseAlbum execDst total totWidth byteCount src
             else
               liftIO $ printf "Destination directory \"%s\" already exists\n" execDst
         else do
           unless (sDryrun args) $ mkdir execDst
-          traverseAlbum execDst total totWidth counter byteCount src
+          traverseAlbum execDst total totWidth byteCount src
 
 {- Counter, mostly global -}
 
