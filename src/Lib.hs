@@ -222,15 +222,16 @@ shapeDst args dstRoot totw n dstStep srcFile =
    in dstRoot </> (if sTreeDst args then dstStep else "") </> (prefx <> name <> ext)
 
 -- | Makes one copy from source to destination directory.
-copyFile :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> IO ()
-copyFile args dstRoot total totw counter dstStep srcFile = do
-  next <- counter 1
+copyFile :: FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> App ()
+copyFile dstRoot total totw counter dstStep srcFile = do
+  args <- asksSettings id
+  next <- liftIO $ counter 1
   let n = if sReverse args then total - next + 1 else next
   let dst = shapeDst args dstRoot totw n dstStep srcFile
   unless (sDryrun args) $ do
     cp srcFile dst
-    setTagsToCopy args n dst
-  putCopy args total totw n srcFile dst
+    setTagsToCopy n dst
+  liftIO $ putCopy args total totw n srcFile dst
 
 -- | Walks the source tree, recreates source tree at destination.
 traverseTreeDst :: FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> App ()
@@ -244,7 +245,7 @@ traverseTreeDst dstRoot total totw counter dstStep srcDir = do
         traverseTreeDst dstRoot total totw counter step dir
 
   mapM_ walk dirs
-  mapM_ (liftIO . copyFile args dstRoot total totw counter dstStep) files
+  mapM_ (copyFile dstRoot total totw counter dstStep) files
 
 -- | Walks the source tree.
 traverseFlatDst :: FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> App ()
@@ -257,7 +258,7 @@ traverseFlatDst dstRoot total totw counter dstStep srcDir = do
         traverseFlatDst dstRoot total totw counter step dir
 
   mapM_ walk dirs
-  mapM_ (liftIO . copyFile args dstRoot total totw counter dstStep) files
+  mapM_ (copyFile dstRoot total totw counter dstStep) files
 
 -- | Walks the source tree backwards.
 traverseFlatDstR :: FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> App ()
@@ -269,7 +270,7 @@ traverseFlatDstR dstRoot total totw counter dstStep srcDir = do
         let step = dstStep </> filename dir
         traverseFlatDstR dstRoot total totw counter step dir
 
-  mapM_ (liftIO . copyFile args dstRoot total totw counter dstStep) files
+  mapM_ (copyFile dstRoot total totw counter dstStep) files
   mapM_ walk dirs
 
 -- | Fires the files into the already existing destination directory.
@@ -382,9 +383,14 @@ shapeTitle args n fileName ss =
             else printf "%d %s" n ss
     )
 
+setTagsToCopy :: Int -> FilePath -> App ()
+setTagsToCopy trackNum file = do
+  args <- asksSettings id
+  liftIO $ setTagsToCopy' args trackNum file
+
 -- | Sets tags to the destination file.
-setTagsToCopy :: Settings -> Int -> FilePath -> IO ()
-setTagsToCopy args trackNum file
+setTagsToCopy' :: Settings -> Int -> FilePath -> IO ()
+setTagsToCopy' args trackNum file
   | isJust (sArtistTag args) && isAlbumTag =
       st $
         titleSetter
