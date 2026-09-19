@@ -173,15 +173,13 @@ dirList args src = do
   return (sortBy cmp dirs, sortBy cmp $ filter (isAudioFile args) files)
 
 -- | Makes a file name prefix or suffix out of the Artist Tag, if there is any.
-artistName :: Settings -> Bool -> String
-artistName args isPrefix =
-  let name = maybe "" T.unpack (sArtistTag args)
-   in if length name > 0
-        then
-          if isPrefix
-            then name <> " - "
-            else " - " <> name
-        else name
+artistGroomedToJoin :: Settings -> Bool -> String
+artistGroomedToJoin args asPrefix
+  | null name = name
+  | asPrefix = name <> " - "
+  | otherwise = " - " <> name -- asSuffix
+ where
+  name = maybe "" T.unpack (sArtistTag args)
 
 -- | Makes destination file path.
 shapeDst :: Settings -> FilePath -> Int -> Int -> FilePath -> FilePath -> FilePath
@@ -196,7 +194,7 @@ shapeDst args dstRoot totw n dstStep srcFile =
                 then "[" <> concatMap (\c -> if c == '/' then "][" else [c]) dstStep <> "]-"
                 else ""
       name = case sUnifiedName args of
-        Just uName -> T.unpack uName <> artistName args False
+        Just uName -> T.unpack uName <> artistGroomedToJoin args False
         Nothing -> baseName srcFile
       ext = case extension srcFile of
         Just extn -> "." <> extn
@@ -305,7 +303,7 @@ copyAlbum args = do
       baseDst = case sUnifiedName args of
         Just uname ->
           albumNum
-            <> artistName args True
+            <> artistGroomedToJoin args True
             <> T.unpack uname
         Nothing -> albumNum <> srcName
       execDst = dst </> if sDropDst args then "" else baseDst
