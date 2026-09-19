@@ -9,11 +9,15 @@ module Lib (
   description,
   settingsP,
   copyAlbum,
+  Ctx (..),
+  App,
+  runApp,
 ) where
 
 import Control.Foldl qualified as FL
 
 import Control.Monad.Extra
+import Control.Monad.Reader
 import Data.Char (toUpper)
 import Data.IORef
 import Data.List (sortBy)
@@ -116,6 +120,22 @@ description =
   one file, or in the reversed order. This can be important for some mobile devices.
   #{hi} Really useful options. #{su} Suspicious media.
   v#{showVersion version}|]
+
+data Ctx = Ctx
+  { ctxSettings :: Settings
+  }
+
+type App = ReaderT Ctx IO
+
+asksSettings :: (Settings -> a) -> App a
+asksSettings entry = asks (entry . ctxSettings)
+
+_settings :: App Settings
+_settings = asks ctxSettings
+
+runApp :: App ()
+runApp = do
+  copyAlbum
 
 -- | Gets file size in bytes.
 fsize :: FilePath -> IO Integer
@@ -250,50 +270,54 @@ traverseFlatDstR args dstRoot total totw counter dstStep srcDir = do
   mapM_ walk dirs
 
 -- | Fires the files into the already existing destination directory.
-traverseAlbum :: Settings -> FilePath -> Int -> Int -> Counter -> Integer -> FilePath -> IO ()
-traverseAlbum args execDst total totWidth counter byteCount src = do
-  putHeader args
+traverseAlbum :: FilePath -> Int -> Int -> Counter -> Integer -> FilePath -> App ()
+traverseAlbum execDst total totWidth counter byteCount src = do
+  args <- asksSettings id
+
+  liftIO $ putHeader args
   if sTreeDst args
-    then traverseTreeDst args execDst total totWidth counter "" src
+    then liftIO $ traverseTreeDst args execDst total totWidth counter "" src
     else
       if sReverse args
-        then traverseFlatDstR args execDst total totWidth counter "" src
-        else traverseFlatDst args execDst total totWidth counter "" src
-  putFooter args total byteCount
+        then liftIO $ traverseFlatDstR args execDst total totWidth counter "" src
+        else liftIO $ traverseFlatDst args execDst total totWidth counter "" src
+  liftIO $ putFooter args total byteCount
 
 -- | Copies the album.
-copyAlbum :: Settings -> IO ()
-copyAlbum args = do
+copyAlbum :: App ()
+copyAlbum = do
+  args <- asksSettings id
+
   src <- realpath (sSrc args)
 
   unlessM (testdir src) $ do
-    printf "Source directory \"%s\" does not exist\n" src
+    liftIO $ printf "Source directory \"%s\" does not exist\n" src
     exit (ExitFailure 1)
 
-  (total, byteCount) <- treeCount args
+  (total, byteCount) <- liftIO $ treeCount args
   let totWidth = length $ show total
 
   when (total < 1) $ do
-    printf "No audio files discovered in the source directory\n"
+    liftIO $ printf "No audio files discovered in the source directory\n"
     exit ExitSuccess
 
   when (sCount args) $ do
-    printf "Files: %d; Volume: %s\n" total (humanFine byteCount)
+    liftIO $ printf "Files: %d; Volume: %s\n" total (humanFine byteCount)
     exit ExitSuccess
 
   dst <- realpath (sDst args)
 
   unlessM (testdir dst) $ do
-    printf "Destination directory \"%s\" does not exist\n" dst
+    liftIO $ printf "Destination directory \"%s\" does not exist\n" dst
     exit (ExitFailure 1)
 
   when (dst `isRelativeTo` src) $ do
-    printf "Target directory \"%s\"\n" dst
-    printf "is inside source \"%s\"\n" src
+    liftIO $ printf "Target directory \"%s\"\n" dst
+    liftIO $ printf "is inside source \"%s\"\n" src
     exit (ExitFailure 1)
 
   -- The global (line) counter
-  counter <- makeCounter
+  counter <- liftIO $ makeCounter
   -- exists from now on.
   --
   let srcName = basename src -- src must be a directory.
@@ -309,7 +333,7 @@ copyAlbum args = do
       execDst = dst </> if sDropDst args then "" else baseDst
 
   if sDropDst args
-    then traverseAlbum args execDst total totWidth counter byteCount src
+    then traverseAlbum execDst total totWidth counter byteCount src
     else do
       exists <- testdir execDst
       if exists
@@ -319,12 +343,12 @@ copyAlbum args = do
               unless (sDryrun args) $ do
                 rmtree execDst
                 mkdir execDst
-              traverseAlbum args execDst total totWidth counter byteCount src
+              traverseAlbum execDst total totWidth counter byteCount src
             else
-              printf "Destination directory \"%s\" already exists\n" execDst
+              liftIO $ printf "Destination directory \"%s\" already exists\n" execDst
         else do
           unless (sDryrun args) $ mkdir execDst
-          traverseAlbum args execDst total totWidth counter byteCount src
+          traverseAlbum execDst total totWidth counter byteCount src
 
 {- Counter, mostly global -}
 

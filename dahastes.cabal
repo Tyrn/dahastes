@@ -38,12 +38,12 @@ library
   other-modules:   Paths_dahastes
   build-depends:
     , containers
+    , turtle
     , mtl
     , extra
     , filepath
     , unix-compat
     , directory-ospath-streaming
-    , turtle
     , doctest
     , regex-base
     , regex-tdfa
@@ -54,7 +54,6 @@ library
     , directory
     , filemanip
     , foldl
-    , mtl
     , htaglib
     , system-filepath
 
@@ -65,6 +64,7 @@ executable dahastes
   build-depends:
     , dahastes
     , turtle
+    , mtl
     , text
     , foldl
     , extra
