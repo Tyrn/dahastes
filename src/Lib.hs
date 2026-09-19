@@ -250,8 +250,8 @@ traverseFlatDstR args dstRoot total totw counter dstStep srcDir = do
   mapM_ walk dirs
 
 -- | Fires the files into the already existing destination directory.
-traverseAlbum :: Settings -> FilePath -> Int -> Int -> Counter -> FilePath -> IO ()
-traverseAlbum args execDst total totWidth counter src = do
+traverseAlbum :: Settings -> FilePath -> Int -> Int -> Counter -> Integer -> FilePath -> IO ()
+traverseAlbum args execDst total totWidth counter byteCount src = do
   putHeader args
   if sTreeDst args
     then traverseTreeDst args execDst total totWidth counter "" src
@@ -259,7 +259,7 @@ traverseAlbum args execDst total totWidth counter src = do
       if sReverse args
         then traverseFlatDstR args execDst total totWidth counter "" src
         else traverseFlatDst args execDst total totWidth counter "" src
-  putFooter args total
+  putFooter args total byteCount
 
 -- | Copies the album.
 copyAlbum :: Settings -> IO ()
@@ -278,7 +278,7 @@ copyAlbum args = do
     exit ExitSuccess
 
   when (sCount args) $ do
-    printf "Files: %d, total size: %s\n" total (humanFine byteCount)
+    printf "Files: %d; Volume: %s\n" total (humanFine byteCount)
     exit ExitSuccess
 
   dst <- realpath (sDst args)
@@ -309,7 +309,7 @@ copyAlbum args = do
       execDst = dst </> if sDropDst args then "" else baseDst
 
   if sDropDst args
-    then traverseAlbum args execDst total totWidth counter src
+    then traverseAlbum args execDst total totWidth counter byteCount src
     else do
       exists <- testdir execDst
       if exists
@@ -319,12 +319,12 @@ copyAlbum args = do
               unless (sDryrun args) $ do
                 rmtree execDst
                 mkdir execDst
-              traverseAlbum args execDst total totWidth counter src
+              traverseAlbum args execDst total totWidth counter byteCount src
             else
               printf "Destination directory \"%s\" already exists\n" execDst
         else do
           unless (sDryrun args) $ mkdir execDst
-          traverseAlbum args execDst total totWidth counter src
+          traverseAlbum args execDst total totWidth counter byteCount src
 
 {- Counter, mostly global -}
 
@@ -528,11 +528,12 @@ putCopy args total totw n srcFile dstFile = do
     else putStr "."
 
 -- | Prints the footer of the output to the console.
-putFooter :: Settings -> Int -> IO ()
-putFooter args total = do
+putFooter :: Settings -> Int -> Integer -> IO ()
+putFooter args total byteCount = do
+  let bcount = humanFine byteCount
   if sVerbose args || sDryrun args
     then
       if sDryrun args
-        then putStr (printf "Total of %d file(s) good to copy\n" total)
-        else putStr (printf "Total of %d file(s) copied\n" total)
-    else putStr (printf " Done(%d)\n" total)
+        then putStr (printf "Total of %d file(s) good to copy; Volume: %s\n" total bcount)
+        else putStr (printf "Total of %d file(s) copied; Volume: %s\n" total bcount)
+    else putStr (printf " Done(%d); Volume: %s\n" total bcount)
