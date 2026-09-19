@@ -219,9 +219,10 @@ shapeDst args dstRoot totw n dstStep srcFile =
    in dstRoot </> (if sTreeDst args then dstStep else "") </> (prefx <> name <> ext)
 
 -- | Makes one copy from source to destination directory.
-copyFile :: FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> App ()
-copyFile dstRoot total totw counter dstStep srcFile = do
+copyFile :: FilePath -> Int -> Int -> FilePath -> FilePath -> App ()
+copyFile dstRoot total totw dstStep srcFile = do
   args <- asksSettings id
+  counter <- asks ctxCounter
   next <- liftIO $ counter 1
   let n = if sReverse args then total - next + 1 else next
   let dst = shapeDst args dstRoot totw n dstStep srcFile
@@ -242,7 +243,7 @@ traverseTreeDst dstRoot total totw counter dstStep srcDir = do
         traverseTreeDst dstRoot total totw counter step dir
 
   mapM_ walk dirs
-  mapM_ (copyFile dstRoot total totw counter dstStep) files
+  mapM_ (copyFile dstRoot total totw dstStep) files
 
 -- | Walks the source tree.
 traverseFlatDst :: FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> App ()
@@ -255,7 +256,7 @@ traverseFlatDst dstRoot total totw counter dstStep srcDir = do
         traverseFlatDst dstRoot total totw counter step dir
 
   mapM_ walk dirs
-  mapM_ (copyFile dstRoot total totw counter dstStep) files
+  mapM_ (copyFile dstRoot total totw dstStep) files
 
 -- | Walks the source tree backwards.
 traverseFlatDstR :: FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> App ()
@@ -267,7 +268,7 @@ traverseFlatDstR dstRoot total totw counter dstStep srcDir = do
         let step = dstStep </> filename dir
         traverseFlatDstR dstRoot total totw counter step dir
 
-  mapM_ (copyFile dstRoot total totw counter dstStep) files
+  mapM_ (copyFile dstRoot total totw dstStep) files
   mapM_ walk dirs
 
 -- | Fires the files into the already existing destination directory.
