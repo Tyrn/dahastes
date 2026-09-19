@@ -317,10 +317,8 @@ copyAlbum = do
     liftIO $ printf "is inside source \"%s\"\n" src
     exit (ExitFailure 1)
 
-  -- The global (line) counter
-  counter <- liftIO $ makeCounter
-  -- exists from now on.
-  --
+  counter <- asks ctxCounter
+
   let srcName = basename src -- src must be a directory.
       albumNum = case sAlbumNum args of
         Just num -> zeroPad num 2 <> "-"
