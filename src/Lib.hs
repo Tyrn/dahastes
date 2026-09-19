@@ -48,6 +48,7 @@ data Ctx = Ctx
   , ctxFileCount :: Int
   , ctxByteCount :: Integer
   , ctxFileCountWidth :: Int
+  , ctxDstRoot :: FilePath
   }
 
 -- A starting context with zeroes (before treeCount runs):
@@ -59,6 +60,7 @@ initialCtx args counter =
     , ctxFileCount = 0
     , ctxByteCount = 0
     , ctxFileCountWidth = 1
+    , ctxDstRoot = ""
     }
 
 type App = ReaderT Ctx IO
@@ -248,57 +250,60 @@ copyFile dstRoot dstStep srcFile = do
   putCopy n srcFile dst
 
 -- | Walks the source tree, recreates source tree at destination.
-traverseTreeDst :: FilePath -> FilePath -> FilePath -> App ()
-traverseTreeDst dstRoot dstStep srcDir = do
+traverseTreeDst :: FilePath -> FilePath -> App ()
+traverseTreeDst dstStep srcDir = do
   args <- asksSettings id
+  dstRoot <- asks ctxDstRoot
   (dirs, files) <- liftIO $ dirList args srcDir
 
   let walk dir = do
         let step = dstStep </> filename dir
         unless (sDryrun args) $ mkdir (dstRoot </> step)
-        traverseTreeDst dstRoot step dir
+        traverseTreeDst step dir
 
   mapM_ walk dirs
   mapM_ (copyFile dstRoot dstStep) files
 
 -- | Walks the source tree.
-traverseFlatDst :: FilePath -> FilePath -> FilePath -> App ()
-traverseFlatDst dstRoot dstStep srcDir = do
+traverseFlatDst :: FilePath -> FilePath -> App ()
+traverseFlatDst dstStep srcDir = do
   args <- asksSettings id
+  dstRoot <- asks ctxDstRoot
   (dirs, files) <- liftIO $ dirList args srcDir
 
   let walk dir = do
         let step = dstStep </> filename dir
-        traverseFlatDst dstRoot step dir
+        traverseFlatDst step dir
 
   mapM_ walk dirs
   mapM_ (copyFile dstRoot dstStep) files
 
 -- | Walks the source tree backwards.
-traverseFlatDstR :: FilePath -> FilePath -> FilePath -> App ()
-traverseFlatDstR dstRoot dstStep srcDir = do
+traverseFlatDstR :: FilePath -> FilePath -> App ()
+traverseFlatDstR dstStep srcDir = do
   args <- asksSettings id
+  dstRoot <- asks ctxDstRoot
   (dirs, files) <- liftIO $ dirList args srcDir
 
   let walk dir = do
         let step = dstStep </> filename dir
-        traverseFlatDstR dstRoot step dir
+        traverseFlatDstR step dir
 
   mapM_ (copyFile dstRoot dstStep) files
   mapM_ walk dirs
 
 -- | Fires the files into the already existing destination directory.
-traverseAlbum :: FilePath -> FilePath -> App ()
-traverseAlbum execDst src = do
+traverseAlbum :: FilePath -> App ()
+traverseAlbum src = do
   args <- asksSettings id
 
   putHeader
   if sTreeDst args
-    then traverseTreeDst execDst "" src
+    then traverseTreeDst "" src
     else
       if sReverse args
-        then traverseFlatDstR execDst "" src
-        else traverseFlatDst execDst "" src
+        then traverseFlatDstR "" src
+        else traverseFlatDst "" src
   putFooter
 
 -- | Copies the album.
@@ -352,10 +357,11 @@ copyAlbum = do
         { ctxFileCount = fileCount
         , ctxByteCount = byteCount
         , ctxFileCountWidth = fileCountWidth
+        , ctxDstRoot = execDst
         }
   local extendCtx $ do
     if sDropDst args
-      then traverseAlbum execDst src
+      then traverseAlbum src
       else do
         exists <- testdir execDst
         if exists
@@ -365,12 +371,12 @@ copyAlbum = do
                 unless (sDryrun args) $ do
                   rmtree execDst
                   mkdir execDst
-                traverseAlbum execDst src
+                traverseAlbum src
               else
                 liftIO $ printf "Destination directory \"%s\" already exists\n" execDst
           else do
             unless (sDryrun args) $ mkdir execDst
-            traverseAlbum execDst src
+            traverseAlbum src
 
 {- Counter, mostly global -}
 
