@@ -481,23 +481,23 @@ humanFine bytes
       let trueExp = integerLogBase 1024 bytes
           unitIdx = min trueExp (length unitList - 1)
           quotient = fromIntegral bytes / (1024 ^ unitIdx :: Double)
-          (unitName, numDecimals) = unitList !! unitIdx
+          (unitName, numDecimals, _, _) = unitList !! unitIdx
        in printf ("%." ++ show numDecimals ++ "f%s") quotient unitName
   | bytes == 0 = "0"
   | bytes == 1 = "1"
   | otherwise = "humanFine error; bytes: " ++ show bytes
  where
-  unitList :: [(String, Int)]
+  unitList :: [(String, Int, String, String)]
   unitList =
-    [ ("", 0)
-    , ("kB", 0)
-    , ("MB", 1)
-    , ("GB", 2)
-    , ("TB", 2)
-    , ("PB", 2)
-    , ("EB", 2)
-    , ("ZB", 2)
-    , ("YB", 2)
+    [ ("", 0, "1024^0", "Byte")
+    , ("kB", 0, "1024^1", "Kilobyte")
+    , ("MB", 1, "1024^2", "Megabyte")
+    , ("GB", 2, "1024^3", "Gigabyte")
+    , ("TB", 2, "1024^4", "Terabyte")
+    , ("PB", 2, "1024^5", "Petabyte")
+    , ("EB", 2, "1024^6", "Exabyte")
+    , ("ZB", 2, "1024^7", "Zettabyte")
+    , ("YB", 2, "1024^8", "Yottabyte")
     ]
 
   integerLogBase :: Integer -> Integer -> Int
