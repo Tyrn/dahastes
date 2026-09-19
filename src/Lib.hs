@@ -251,59 +251,59 @@ copyFile dstRoot dstStep srcFile = do
 
 -- | Walks the source tree, recreates source tree at destination.
 traverseTreeDst :: FilePath -> FilePath -> App ()
-traverseTreeDst dstStep srcDir = do
+traverseTreeDst srcDir stepDown = do
   args <- asksSettings id
   dstRoot <- asks ctxDstRoot
   (dirs, files) <- liftIO $ dirList args srcDir
 
-  let walk dir = do
-        let step = dstStep </> filename dir
+  let walk srcdir = do
+        let step = stepDown </> filename srcdir
         unless (sDryrun args) $ mkdir (dstRoot </> step)
-        traverseTreeDst step dir
+        traverseTreeDst srcdir step
 
   mapM_ walk dirs
-  mapM_ (copyFile dstRoot dstStep) files
+  mapM_ (copyFile dstRoot stepDown) files
 
 -- | Walks the source tree.
 traverseFlatDst :: FilePath -> FilePath -> App ()
-traverseFlatDst dstStep srcDir = do
+traverseFlatDst srcDir stepDown = do
   args <- asksSettings id
   dstRoot <- asks ctxDstRoot
   (dirs, files) <- liftIO $ dirList args srcDir
 
-  let walk dir = do
-        let step = dstStep </> filename dir
-        traverseFlatDst step dir
+  let walk srcdir = do
+        let step = stepDown </> filename srcdir
+        traverseFlatDst srcdir step
 
   mapM_ walk dirs
-  mapM_ (copyFile dstRoot dstStep) files
+  mapM_ (copyFile dstRoot stepDown) files
 
 -- | Walks the source tree backwards.
 traverseFlatDstR :: FilePath -> FilePath -> App ()
-traverseFlatDstR dstStep srcDir = do
+traverseFlatDstR srcDir stepDown = do
   args <- asksSettings id
   dstRoot <- asks ctxDstRoot
   (dirs, files) <- liftIO $ dirList args srcDir
 
-  let walk dir = do
-        let step = dstStep </> filename dir
-        traverseFlatDstR step dir
+  let walk srcdir = do
+        let step = stepDown </> filename srcdir
+        traverseFlatDstR srcdir step
 
-  mapM_ (copyFile dstRoot dstStep) files
+  mapM_ (copyFile dstRoot stepDown) files
   mapM_ walk dirs
 
 -- | Fires the files into the already existing destination directory.
 traverseAlbum :: FilePath -> App ()
-traverseAlbum src = do
+traverseAlbum srcDir = do
   args <- asksSettings id
 
   putHeader
   if sTreeDst args
-    then traverseTreeDst "" src
+    then traverseTreeDst srcDir ""
     else
       if sReverse args
-        then traverseFlatDstR "" src
-        else traverseFlatDst "" src
+        then traverseFlatDstR srcDir ""
+        else traverseFlatDst srcDir ""
   putFooter
 
 -- | Copies the album.
