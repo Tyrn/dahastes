@@ -172,10 +172,16 @@ dirList args src = do
   (dirs, files) <- partitionM testdir list
   return (sortBy cmp dirs, sortBy cmp $ filter (isAudioFile args) files)
 
--- | Makes a file name prefix out of the Artist Tag, if there is any.
-artistPrefix :: Settings -> String
-artistPrefix args =
-  maybe "" T.unpack (sArtistTag args)
+-- | Makes a file name prefix or suffix out of the Artist Tag, if there is any.
+artistName :: Settings -> Bool -> String
+artistName args isPrefix =
+  let name = maybe "" T.unpack (sArtistTag args)
+   in if length name > 0
+        then
+          if isPrefix
+            then name <> " - "
+            else " - " <> name
+        else name
 
 -- | Makes destination file path.
 shapeDst :: Settings -> FilePath -> Int -> Int -> FilePath -> FilePath -> FilePath
@@ -190,7 +196,7 @@ shapeDst args dstRoot totw n dstStep srcFile =
                 then "[" <> concatMap (\c -> if c == '/' then "][" else [c]) dstStep <> "]-"
                 else ""
       name = case sUnifiedName args of
-        Just uName -> T.unpack uName <> " - " <> artistPrefix args
+        Just uName -> T.unpack uName <> artistName args False
         Nothing -> baseName srcFile
       ext = case extension srcFile of
         Just extn -> "." <> extn
@@ -293,17 +299,16 @@ copyAlbum args = do
   -- exists from now on.
   --
   let srcName = basename src -- src must be a directory.
-  let albumNum = case sAlbumNum args of
+      albumNum = case sAlbumNum args of
         Just num -> zeroPad num 2 <> "-"
         Nothing -> ""
-  let baseDst = case sUnifiedName args of
+      baseDst = case sUnifiedName args of
         Just uname ->
           albumNum
-            <> artistPrefix args
-            <> " - "
+            <> artistName args True
             <> T.unpack uname
         Nothing -> albumNum <> srcName
-  let execDst = dst </> if sDropDst args then "" else baseDst
+      execDst = dst </> if sDropDst args then "" else baseDst
 
   if sDropDst args
     then traverseAlbum args execDst total totWidth counter src
