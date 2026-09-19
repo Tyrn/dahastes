@@ -118,7 +118,9 @@ description =
 fsize :: FilePath -> IO Integer
 fsize path = do
   status <- Posix.getFileStatus path
-  return (fromIntegral (Posix.fileSize status))
+  return $ fromIntegral $ Posix.fileSize status
+
+-- On Windows, use System.Directory.getFileSize
 
 {- | Counts audio files and sums their sizes recursively.
 Returns (count, totalBytes).
@@ -138,9 +140,6 @@ treeCount args = do
         size <- fsize path
         return (cnt + 1, total + size)
       else return (cnt, total)
-
--- On Windows, use System.Directory:
--- getFileSize = System.Directory.getFileSize
 
 -- | Serves the list of all audio files in the source directory.
 _treeList :: Settings -> IO [FilePath]
@@ -212,7 +211,7 @@ traverseTreeDst args dstRoot total totw counter dstStep srcDir = do
   (dirs, files) <- dirList args srcDir
 
   let walk dir = do
-        let step = dstStep </> filename dir -- dir has NO trailing slash!
+        let step = dstStep </> filename dir
         unless (sDryrun args) $ mkdir (dstRoot </> step)
         traverseTreeDst args dstRoot total totw counter step dir
 
@@ -290,7 +289,7 @@ copyAlbum args = do
   counter <- makeCounter
   -- exists from now on.
   --
-  let srcName = dirname src -- src HAS a trailing slash!
+  let srcName = basename src -- src must be a directory.
   let albumNum = case sAlbumNum args of
         Just num -> zeroPad num 2 <> "-"
         Nothing -> ""
