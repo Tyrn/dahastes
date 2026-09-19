@@ -11,7 +11,7 @@ module Lib (
   copyAlbum,
   Ctx (..),
   App,
-  runApp,
+  makeCounter,
 ) where
 
 import Control.Foldl qualified as FL
@@ -123,6 +123,7 @@ description =
 
 data Ctx = Ctx
   { ctxSettings :: Settings
+  , ctxCounter :: Counter
   }
 
 type App = ReaderT Ctx IO
@@ -132,10 +133,6 @@ asksSettings entry = asks (entry . ctxSettings)
 
 _settings :: App Settings
 _settings = asks ctxSettings
-
-runApp :: App ()
-runApp = do
-  copyAlbum
 
 -- | Gets file size in bytes.
 fsize :: FilePath -> IO Integer

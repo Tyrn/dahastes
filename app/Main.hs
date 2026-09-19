@@ -11,4 +11,5 @@ import Turtle hiding (find, printf, sortBy, stderr, stdout)
 main :: IO ()
 main = do
   args <- options description settingsP
-  runReaderT runApp (Ctx args)
+  counter <- makeCounter
+  runReaderT copyAlbum (Ctx args counter)
