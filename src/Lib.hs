@@ -67,11 +67,14 @@ ar = "\x1f4a5" -- Danger
 hi :: String
 hi = "\x2728" -- Feature
 
-fw :: String
-fw = "\x1f98b" -- Grace
+_au :: String
+_au = "\x1f98b" -- Aglais urticae
 
 tw :: String
-tw = "\x1fae5" -- Dry run
+tw = "\x2b51" -- Small star
+
+tk :: String
+tk = "\x2713" -- Tick
 
 su :: String
 su = "❔" -- Doubt
@@ -94,7 +97,7 @@ settingsP =
     <*> switch "count" 'c' "Just count the files"
     <*> optional (optText "file-type" 'e' "Accept only audio files of the specified type")
     <*> switch "prepend-subdir-name" 'i' "Prepend current subdirectory name to a file name"
-    <*> optional (optText "unified-name" 'u' [i|#{hi} Base name for everything, except for the "Artist" tag|])
+    <*> optional (optText "unified-name" 'u' [i|#{hi}#{hi} Base name for everything, except for the "Artist" tag|])
     <*> optional (optInt "album-num" 'b' "Add album number to destination")
     <*> optional (optText "artist" 'a' [i|#{hi} "Artist" tag|])
     <*> optional (optText "album" 'm' [i|#{hi} "Album" tag|])
@@ -515,8 +518,8 @@ putCopy args total totw n srcFile dstFile = do
       let fmt =
             "%"
               <> printf "%d" totw
-              <> [i|d#{if sDryrun args then tw else fw}%d %s|]
-              <> (if sDryrun args then [i| ✓ #{humanFine size}|] else "")
+              <> [i|d#{if sDryrun args then tw else tw}%d %s|]
+              <> (if sDryrun args then [i| #{tk} #{humanFine size}|] else "")
               <> "\n"
        in putStr (printf fmt n total dstFile)
     else putStr "."
