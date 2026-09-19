@@ -296,15 +296,15 @@ copyAlbum = do
     liftIO $ printf "Source directory \"%s\" does not exist\n" src
     exit (ExitFailure 1)
 
-  (total, byteCount) <- liftIO $ treeCount args
-  let totWidth = length $ show total
+  (fileCount, byteCount) <- liftIO $ treeCount args
+  let fileCountWidth = length $ show fileCount
 
-  when (total < 1) $ do
+  when (fileCount < 1) $ do
     liftIO $ printf "No audio files discovered in the source directory\n"
     exit ExitSuccess
 
   when (sCount args) $ do
-    liftIO $ printf "Files: %d; Volume: %s\n" total (humanFine byteCount)
+    liftIO $ printf "Files: %d; Volume: %s\n" fileCount (humanFine byteCount)
     exit ExitSuccess
 
   dst <- realpath (sDst args)
@@ -331,7 +331,7 @@ copyAlbum = do
       execDst = dst </> if sDropDst args then "" else baseDst
 
   if sDropDst args
-    then traverseAlbum execDst total totWidth byteCount src
+    then traverseAlbum execDst fileCount fileCountWidth byteCount src
     else do
       exists <- testdir execDst
       if exists
@@ -341,12 +341,12 @@ copyAlbum = do
               unless (sDryrun args) $ do
                 rmtree execDst
                 mkdir execDst
-              traverseAlbum execDst total totWidth byteCount src
+              traverseAlbum execDst fileCount fileCountWidth byteCount src
             else
               liftIO $ printf "Destination directory \"%s\" already exists\n" execDst
         else do
           unless (sDryrun args) $ mkdir execDst
-          traverseAlbum execDst total totWidth byteCount src
+          traverseAlbum execDst fileCount fileCountWidth byteCount src
 
 {- Counter, mostly global -}
 
