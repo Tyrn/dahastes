@@ -231,7 +231,7 @@ copyFile dstRoot total totw counter dstStep srcFile = do
   unless (sDryrun args) $ do
     cp srcFile dst
     setTagsToCopy n dst
-  liftIO $ putCopy args total totw n srcFile dst
+  putCopy total totw n srcFile dst
 
 -- | Walks the source tree, recreates source tree at destination.
 traverseTreeDst :: FilePath -> Int -> Int -> Counter -> FilePath -> FilePath -> App ()
@@ -278,14 +278,14 @@ traverseAlbum :: FilePath -> Int -> Int -> Counter -> Integer -> FilePath -> App
 traverseAlbum execDst total totWidth counter byteCount src = do
   args <- asksSettings id
 
-  liftIO $ putHeader args
+  putHeader
   if sTreeDst args
     then traverseTreeDst execDst total totWidth counter "" src
     else
       if sReverse args
         then traverseFlatDstR execDst total totWidth counter "" src
         else traverseFlatDst execDst total totWidth counter "" src
-  liftIO $ putFooter args total byteCount
+  putFooter total byteCount
 
 -- | Copies the album.
 copyAlbum :: App ()
@@ -539,34 +539,39 @@ humanFine bytes
     | otherwise = 1 + integerLogBase b (n `div` b)
 
 -- | Prints the header of the output to the console.
-putHeader :: Settings -> IO ()
-putHeader args = do
+putHeader :: App ()
+putHeader = do
+  args <- asksSettings id
+
   if sVerbose args || sDryrun args
-    then putStr ""
-    else putStr "Start "
+    then liftIO $ putStr ""
+    else liftIO $ putStr "Start "
 
 -- | Prints a single file copy info to the console.
-putCopy :: Settings -> Int -> Int -> Int -> FilePath -> FilePath -> IO ()
-putCopy args total totw n srcFile dstFile = do
+putCopy :: Int -> Int -> Int -> FilePath -> FilePath -> App ()
+putCopy total totw n srcFile dstFile = do
+  args <- asksSettings id
+
   if sVerbose args || sDryrun args
     then do
-      size <- fsize srcFile
+      size <- liftIO $ fsize srcFile
       let fmt =
             "%"
               <> printf "%d" totw
               <> [i|d#{if sDryrun args then tw else tw}%d %s|]
               <> (if sDryrun args then [i| #{tk} #{humanFine size}|] else "")
               <> "\n"
-       in putStr (printf fmt n total dstFile)
-    else putStr "."
+       in liftIO $ putStr (printf fmt n total dstFile)
+    else liftIO $ putStr "."
 
 -- | Prints the footer of the output to the console.
-putFooter :: Settings -> Int -> Integer -> IO ()
-putFooter args total byteCount = do
+putFooter :: Int -> Integer -> App ()
+putFooter total byteCount = do
+  args <- asksSettings id
   let bcount = humanFine byteCount
   if sVerbose args || sDryrun args
     then
       if sDryrun args
-        then putStr (printf "Total of %d file(s) good to copy; Volume: %s\n" total bcount)
-        else putStr (printf "Total of %d file(s) copied; Volume: %s\n" total bcount)
-    else putStr (printf " Done(%d); Volume: %s\n" total bcount)
+        then liftIO $ putStr (printf "Total of %d file(s) good to copy; Volume: %s\n" total bcount)
+        else liftIO $ putStr (printf "Total of %d file(s) copied; Volume: %s\n" total bcount)
+    else liftIO $ putStr (printf " Done(%d); Volume: %s\n" total bcount)
