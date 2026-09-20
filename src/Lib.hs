@@ -199,15 +199,26 @@ makeCompare args =
         then flip cmp
         else cmp
 
-{- | Serves the list of directories and the list of audio files
-of a given parent directory (immediate offspring).
--}
-dirList :: Settings -> FilePath -> IO ([FilePath], [FilePath])
-dirList args src = do
+_dirList :: Settings -> FilePath -> IO ([FilePath], [FilePath])
+_dirList args src = do
   let cmp = makeCompare args
   list <- fold (ls src) FL.list
   (dirs, files) <- partitionM testdir list
   return (sortBy cmp dirs, sortBy cmp $ filter (isAudioFile args) files)
+
+{- | Serves the list of directories and the list of audio files
+of a given parent directory (immediate offspring).
+-}
+dirList :: FilePath -> App ([FilePath], [FilePath])
+dirList src = do
+  args <- asksSettings id
+  let cmp = makeCompare args
+  list <- liftIO $ fold (ls src) FL.list
+  (dirs, files) <- (liftIO . partitionM testdir) list
+  return
+    ( sortBy cmp dirs
+    , sortBy cmp $ filter (isAudioFile args) files
+    )
 
 -- | Makes a file name prefix or suffix out of the Artist Tag, if there is any.
 artistGroomedToJoin :: Settings -> Bool -> String
@@ -291,7 +302,7 @@ traverseTreeDst :: FilePath -> FilePath -> App ()
 traverseTreeDst srcDir stepDown = do
   args <- asksSettings id
   dstRoot <- asks ctxDstRoot
-  (dirs, files) <- liftIO $ dirList args srcDir
+  (dirs, files) <- dirList srcDir
 
   let walk srcdir = do
         let step = stepDown </> filename srcdir
@@ -304,8 +315,7 @@ traverseTreeDst srcDir stepDown = do
 -- | Walks the source tree.
 traverseFlatDst :: FilePath -> FilePath -> App ()
 traverseFlatDst srcDir stepDown = do
-  args <- asksSettings id
-  (dirs, files) <- liftIO $ dirList args srcDir
+  (dirs, files) <- dirList srcDir
 
   let walk srcdir = do
         let step = stepDown </> filename srcdir
@@ -317,8 +327,7 @@ traverseFlatDst srcDir stepDown = do
 -- | Walks the source tree backwards.
 traverseFlatDstR :: FilePath -> FilePath -> App ()
 traverseFlatDstR srcDir stepDown = do
-  args <- asksSettings id
-  (dirs, files) <- liftIO $ dirList args srcDir
+  (dirs, files) <- dirList srcDir
 
   let walk srcdir = do
         let step = stepDown </> filename srcdir
