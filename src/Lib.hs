@@ -40,7 +40,7 @@ import Text.Regex.TDFA
 import Turtle hiding (find, printf, sortBy, stderr, stdout)
 import Prelude
 
-{- ReaderT, which serves globally available objects -}
+{- ReaderT, which serves globally available objects; locally available, that is :) -}
 
 data Ctx = Ctx
   { ctxSettings :: Settings
@@ -51,7 +51,7 @@ data Ctx = Ctx
   , ctxDstRoot :: FilePath
   }
 
--- A starting context with zeroes (before treeCount runs):
+-- | A starting context (makes deferred initialization possible).
 initialCtx :: Settings -> Counter -> Ctx
 initialCtx args counter =
   Ctx
@@ -66,7 +66,7 @@ initialCtx args counter =
 type App = ReaderT Ctx IO
 
 asksSettings :: (Settings -> a) -> App a
-asksSettings entry = asks (entry . ctxSettings)
+asksSettings sOption = asks (sOption . ctxSettings)
 
 {- Command line parser -}
 
@@ -235,15 +235,18 @@ shapeDst args dstRoot totw n dstStep srcFile =
    in dstRoot </> (if sTreeDst args then dstStep else "") </> (prefx <> name <> ext)
 
 -- | Makes one copy from source to destination directory.
-copyFile :: FilePath -> FilePath -> FilePath -> App ()
-copyFile dstRoot dstStep srcFile = do
+copyFile :: FilePath -> FilePath -> App ()
+copyFile stepDown srcFile = do
   args <- asksSettings id
   counter <- asks ctxCounter
   next <- liftIO $ counter 1
   total <- asks ctxFileCount
   totw <- asks ctxFileCountWidth
+  dstRoot <- asks ctxDstRoot
+
   let n = if sReverse args then total - next + 1 else next
-  let dst = shapeDst args dstRoot totw n dstStep srcFile
+      dst = shapeDst args dstRoot totw n stepDown srcFile
+
   unless (sDryrun args) $ do
     cp srcFile dst
     setTagsToCopy n dst
@@ -262,13 +265,12 @@ traverseTreeDst srcDir stepDown = do
         traverseTreeDst srcdir step
 
   mapM_ walk dirs
-  mapM_ (copyFile dstRoot stepDown) files
+  mapM_ (copyFile stepDown) files
 
 -- | Walks the source tree.
 traverseFlatDst :: FilePath -> FilePath -> App ()
 traverseFlatDst srcDir stepDown = do
   args <- asksSettings id
-  dstRoot <- asks ctxDstRoot
   (dirs, files) <- liftIO $ dirList args srcDir
 
   let walk srcdir = do
@@ -276,20 +278,19 @@ traverseFlatDst srcDir stepDown = do
         traverseFlatDst srcdir step
 
   mapM_ walk dirs
-  mapM_ (copyFile dstRoot stepDown) files
+  mapM_ (copyFile stepDown) files
 
 -- | Walks the source tree backwards.
 traverseFlatDstR :: FilePath -> FilePath -> App ()
 traverseFlatDstR srcDir stepDown = do
   args <- asksSettings id
-  dstRoot <- asks ctxDstRoot
   (dirs, files) <- liftIO $ dirList args srcDir
 
   let walk srcdir = do
         let step = stepDown </> filename srcdir
         traverseFlatDstR srcdir step
 
-  mapM_ (copyFile dstRoot stepDown) files
+  mapM_ (copyFile stepDown) files
   mapM_ walk dirs
 
 -- | Fires the files into the already existing destination directory.
@@ -544,7 +545,7 @@ humanFine bytes
   | bytes == 1 = "1"
   | otherwise = "humanFine error; bytes: " ++ show bytes
  where
-  unitList :: [(String, Int, String, String)]
+  unitList :: [(String, Int, Text, Text)]
   unitList =
     [ ("", 0, "1024^0", "Byte")
     , ("kB", 0, "1024^1", "Kilobyte")
