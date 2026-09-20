@@ -16,7 +16,7 @@ module Lib (
 ) where
 
 import Control.Foldl qualified as FL
-
+import Control.Monad.Catch (onException)
 import Control.Monad.Extra
 import Control.Monad.Reader
 import Data.Char (toUpper)
@@ -31,8 +31,11 @@ import Initials
 import PathUtils (isRelativeTo)
 import Paths_dahastes (version)
 import Sound.HTagLib
+import System.Directory (removeFile)
 import System.Directory.OsPath.Streaming (getDirectoryContentsRecursive)
 import System.IO hiding (stderr, stdout)
+import System.IO.Error (catchIOError)
+import System.IO.Temp (emptySystemTempFile)
 import System.OsPath qualified as OsPath
 import System.PosixCompat.Files qualified as Posix
 import Text.Printf
@@ -234,6 +237,29 @@ shapeDst args dstRoot totw n dstStep srcFile =
         Nothing -> ""
    in dstRoot </> (if sTreeDst args then dstStep else "") </> (prefx <> name <> ext)
 
+type ShipFile = FilePath -> FilePath -> Int -> App ()
+
+{- | Stage a tagged copy in the system temp directory, then copy that
+to the destination as a single plain write. The destination is never
+mutated after it appears.
+-}
+shipViaTemp :: ShipFile
+shipViaTemp srcFile dst n = do
+  tmp <- liftIO $ emptySystemTempFile "tagtmp"
+  let cleanup = liftIO $ removeFile tmp `catchIOError` \_ -> pure ()
+  cp srcFile tmp `onException` cleanup
+  setTagsToCopy n tmp `onException` cleanup
+  cp tmp dst `onException` cleanup
+  cleanup
+
+{- | Original behavior: copy straight to the destination, then let the
+tagger rewrite @dst@ in place.
+-}
+shipDirect :: ShipFile
+shipDirect srcFile dst n = do
+  cp srcFile dst
+  setTagsToCopy n dst
+
 -- | Makes one copy from source to destination directory.
 copyFile :: FilePath -> FilePath -> App ()
 copyFile stepDown srcFile = do
@@ -246,10 +272,9 @@ copyFile stepDown srcFile = do
 
   let n = if sReverse args then total - next + 1 else next
       dst = shapeDst args dstRoot totw n stepDown srcFile
+      ship = if True then shipViaTemp else shipDirect
 
-  unless (sDryrun args) $ do
-    cp srcFile dst
-    setTagsToCopy n dst
+  unless (sDryrun args) $ ship srcFile dst n
   putCopy n srcFile dst
 
 -- | Walks the source tree, recreates source tree at destination.

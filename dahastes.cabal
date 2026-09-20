@@ -40,6 +40,8 @@ library
     , containers
     , turtle
     , mtl
+    , temporary
+    , exceptions
     , extra
     , filepath
     , unix-compat
