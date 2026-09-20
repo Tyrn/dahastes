@@ -38,6 +38,7 @@ import System.IO.Error (catchIOError)
 import System.IO.Temp (emptySystemTempFile)
 import System.OsPath qualified as OsPath
 import System.PosixCompat.Files qualified as Posix
+import System.Process (callProcess)
 import Text.Printf
 import Text.Regex.TDFA
 import Turtle hiding (find, printf, sortBy, stderr, stdout)
@@ -135,7 +136,7 @@ settingsP =
     <*> switch "prepend-subdir-name" 'i' "Prepend current subdirectory name to a file name"
     <*> optional (optText "unified-name" 'u' [i|#{hi}#{hi} Base name for everything, except for the "Artist" tag|])
     <*> optional (optInt "album-num" 'b' "Add album number to destination")
-    <*> optional (optText "artist" 'a' [i|#{hi} "Artist" tag|])
+    <*> optional (optText "artist" 'a' [i|#{hi}#{hi} "Artist" tag|])
     <*> optional (optText "album" 'm' [i|#{hi} "Album" tag|])
     <*> argPath "src" "Source directory"
     <*> argPath "dst" "Destination directory"
@@ -236,6 +237,14 @@ shapeDst args dstRoot totw n dstStep srcFile =
         Just extn -> "." <> extn
         Nothing -> ""
    in dstRoot </> (if sTreeDst args then dstStep else "") </> (prefx <> name <> ext)
+
+_adbPush :: FilePath -> FilePath -> App ()
+_adbPush src dst = do
+  liftIO $ callProcess "adb" ["push", src, dst]
+
+_adbMkdir :: FilePath -> App ()
+_adbMkdir path = do
+  liftIO $ callProcess "adb" ["shell", "mkdir", "-p", path]
 
 type ShipFile = FilePath -> FilePath -> Int -> App ()
 
