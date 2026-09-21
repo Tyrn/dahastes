@@ -279,57 +279,28 @@ copyFile stepDown srcFile = do
   unless (sDryrun args) $ ship srcFile dst n
   putCopy n srcFile dst
 
--- | Walks the source tree, recreates source tree at destination.
-traverseTreeDst :: FilePath -> FilePath -> App ()
-traverseTreeDst srcDir stepDown = do
+ordered :: Bool -> App () -> App () -> App ()
+ordered swap a b = if swap then b >> a else a >> b
+
+-- | Walks the source tree, recreates it at destination according to options.
+traverseTheTree :: FilePath -> FilePath -> App ()
+traverseTheTree srcDir stepDown = do
   args <- asksSettings id
   dstRoot <- asks ctxDstRoot
   (dirs, files) <- dirList srcDir
 
   let walk srcdir = do
         let step = stepDown </> filename srcdir
-        unless (sDryrun args) $ mkdir (dstRoot </> step)
-        traverseTreeDst srcdir step
+        when (sTreeDst args && not (sDryrun args)) $ mkdir (dstRoot </> step)
+        traverseTheTree srcdir step
 
-  mapM_ walk dirs
-  mapM_ (copyFile stepDown) files
-
--- | Walks the source tree.
-traverseFlatDst :: FilePath -> FilePath -> App ()
-traverseFlatDst srcDir stepDown = do
-  (dirs, files) <- dirList srcDir
-
-  let walk srcdir = do
-        let step = stepDown </> filename srcdir
-        traverseFlatDst srcdir step
-
-  mapM_ walk dirs
-  mapM_ (copyFile stepDown) files
-
--- | Walks the source tree backwards.
-traverseFlatDstR :: FilePath -> FilePath -> App ()
-traverseFlatDstR srcDir stepDown = do
-  (dirs, files) <- dirList srcDir
-
-  let walk srcdir = do
-        let step = stepDown </> filename srcdir
-        traverseFlatDstR srcdir step
-
-  mapM_ (copyFile stepDown) files
-  mapM_ walk dirs
+  ordered (sReverse args) (mapM_ walk dirs) (mapM_ (copyFile stepDown) files)
 
 -- | Fires the files into the already existing destination directory.
 traverseAlbum :: FilePath -> App ()
 traverseAlbum srcDir = do
-  args <- asksSettings id
-
   putHeader
-  if sTreeDst args
-    then traverseTreeDst srcDir ""
-    else
-      if sReverse args
-        then traverseFlatDstR srcDir ""
-        else traverseFlatDst srcDir ""
+  traverseTheTree srcDir ""
   putFooter
 
 -- | Copies the album.
