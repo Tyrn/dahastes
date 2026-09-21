@@ -32,6 +32,7 @@ import PathUtils (isRelativeTo)
 import Paths_dahastes (version)
 import Sound.HTagLib
 import System.Directory (doesDirectoryExist, listDirectory, removeFile)
+import System.FilePath (makeRelative, pathSeparator)
 import System.IO hiding (stderr, stdout)
 import System.IO.Error (catchIOError)
 import System.IO.Temp (emptySystemTempFile)
@@ -230,7 +231,7 @@ shapeDst args dstRoot totw n dstStep srcFile =
             zeroPad n totw
               <> "-"
               <> if sPrependSubdirName args && length dstStep > 0
-                then "[" <> concatMap (\c -> if c == '/' then "][" else [c]) dstStep <> "]-"
+                then "[" <> concatMap (\c -> if c == pathSeparator then "][" else [c]) dstStep <> "]-"
                 else ""
       name = case sUnifiedName args of
         Just uName -> T.unpack uName <> artistGroomedToJoin args False
@@ -602,6 +603,9 @@ putCopy n srcFile dstFile = do
   args <- asksSettings id
   total <- asks ctxFileCount
   totw <- asks ctxFileCountWidth
+  dstRoot <- asks ctxDstRoot
+
+  let dst = makeRelative dstRoot dstFile
 
   if sVerbose args || sDryrun args
     then do
@@ -609,10 +613,10 @@ putCopy n srcFile dstFile = do
       let fmt =
             "%"
               <> printf "%d" totw
-              <> [i|d#{if sDryrun args then tw else tw}%d %s|]
+              <> [i|d#{if sDryrun args then tw else tw}%d  %s|]
               <> (if sDryrun args then [i| #{tk} #{humanFine size}|] else "")
               <> "\n"
-       in liftIO $ putStr (printf fmt n total dstFile)
+       in liftIO $ putStr (printf fmt n total dst)
     else liftIO $ putStr "."
 
 -- | Prints the footer of the output to the console.
@@ -620,14 +624,19 @@ putFooter :: App ()
 putFooter = do
   args <- asksSettings id
   total <- asks ctxFileCount
+  totw <- asks ctxFileCountWidth
   byteCount <- asks ctxByteCount
+  dstRoot <- asks ctxDstRoot
+
   let bcount = humanFine byteCount
+      dstp = replicate (totw * 2 + 1) '>' <> "  " <> dstRoot <> [pathSeparator]
+
   if sVerbose args || sDryrun args
     then
       if sDryrun args
-        then liftIO $ putStr (printf "Total of %d file(s) good to copy; Volume: %s\n" total bcount)
-        else liftIO $ putStr (printf "Total of %d file(s) copied; Volume: %s\n" total bcount)
-    else liftIO $ putStr (printf " Done(%d); Volume: %s\n" total bcount)
+        then liftIO $ putStr (printf "\n%s\n\nTotal of %d file(s) good to copy; Volume: %s\n" dstp total bcount)
+        else liftIO $ putStr (printf "\n%s\n\nTotal of %d file(s) copied; Volume: %s\n" dstp total bcount)
+    else liftIO $ putStr (printf " Done(%d); Volume: %s;\n%s\n" total bcount dstp)
 
 {- Below are just musings on adb and laziness, not used for the time being -}
 
