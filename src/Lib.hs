@@ -31,12 +31,10 @@ import Initials
 import PathUtils (isRelativeTo)
 import Paths_dahastes (version)
 import Sound.HTagLib
-import System.Directory (removeFile)
-import System.Directory.OsPath.Streaming (getDirectoryContentsRecursive)
+import System.Directory (doesDirectoryExist, listDirectory, removeFile)
 import System.IO hiding (stderr, stdout)
 import System.IO.Error (catchIOError)
 import System.IO.Temp (emptySystemTempFile)
-import System.OsPath qualified as OsPath
 import System.PosixCompat.Files qualified as Posix
 import System.Process (callProcess)
 import Text.Printf
@@ -168,24 +166,24 @@ Returns (count, totalBytes).
 treeCount :: Settings -> IO (Int, Integer)
 treeCount args = do
   src <- realpath (sSrc args)
-  rootPath <- OsPath.encodeUtf src
-  entries <- getDirectoryContentsRecursive rootPath
-  foldM (step rootPath) (0, 0) entries
+  go src (0, 0)
  where
-  step rootPath (cnt, total) (entryPath, _fileType) = do
-    let fullPath = rootPath OsPath.</> entryPath
-    path <- OsPath.decodeUtf fullPath
-    if isAudioFile args path
-      then do
-        size <- fsize path
-        return (cnt + 1, total + size)
-      else return (cnt, total)
-
--- | Serves the list of all audio files in the source directory.
-_treeList :: Settings -> IO [FilePath]
-_treeList args = do
-  list <- (lstree $ sSrc args) `fold` FL.list
-  return $ filter (isAudioFile args) list
+  go :: FilePath -> (Int, Integer) -> IO (Int, Integer)
+  go dir acc = do
+    names <- listDirectory dir
+    foldM step acc names
+   where
+    step (cnt, total) name = do
+      let child = dir </> name
+      isDir <- doesDirectoryExist child
+      if isDir
+        then go child (cnt, total)
+        else
+          if isAudioFile args child
+            then do
+              size <- fsize child
+              return (cnt + 1, total + size)
+            else return (cnt, total)
 
 -- Builds compare function according to options (for dirList only)
 makeCompare :: Settings -> (FilePath -> FilePath -> Ordering)
@@ -198,13 +196,6 @@ makeCompare args =
    in if sReverse args
         then flip cmp
         else cmp
-
-_dirList :: Settings -> FilePath -> IO ([FilePath], [FilePath])
-_dirList args src = do
-  let cmp = makeCompare args
-  list <- (ls src) `fold` FL.list
-  (dirs, files) <- partitionM testdir list
-  return (sortBy cmp dirs, sortBy cmp $ filter (isAudioFile args) files)
 
 {- | Serves the list of directories and the list of audio files
 of a given parent directory (immediate offspring).
@@ -249,21 +240,11 @@ shapeDst args dstRoot totw n dstStep srcFile =
         Nothing -> ""
    in dstRoot </> (if sTreeDst args then dstStep else "") </> (prefx <> name <> ext)
 
-_adbPush :: FilePath -> FilePath -> App ()
-_adbPush src dst = do
-  liftIO $ callProcess "adb" ["push", src, dst]
-
-_adbMkdir :: FilePath -> App ()
-_adbMkdir path = do
-  liftIO $ callProcess "adb" ["shell", "mkdir", "-p", path]
-
-type ShipFile = FilePath -> FilePath -> Int -> App ()
-
 {- | Stage a tagged copy in the system temp directory, then copy that
 to the destination as a single plain write. The destination is never
 mutated after it appears.
 -}
-shipViaTemp :: ShipFile
+shipViaTemp :: FilePath -> FilePath -> Int -> App ()
 shipViaTemp srcFile dst n = do
   tmp <- liftIO $ emptySystemTempFile "tagtmp"
   let cleanup = liftIO $ removeFile tmp `catchIOError` \_ -> pure ()
@@ -275,7 +256,7 @@ shipViaTemp srcFile dst n = do
 {- | Original behavior: copy straight to the destination, then let the
 tagger rewrite @dst@ in place.
 -}
-shipDirect :: ShipFile
+shipDirect :: FilePath -> FilePath -> Int -> App ()
 shipDirect srcFile dst n = do
   cp srcFile dst
   setTagsToCopy n dst
@@ -647,3 +628,59 @@ putFooter = do
         then liftIO $ putStr (printf "Total of %d file(s) good to copy; Volume: %s\n" total bcount)
         else liftIO $ putStr (printf "Total of %d file(s) copied; Volume: %s\n" total bcount)
     else liftIO $ putStr (printf " Done(%d); Volume: %s\n" total bcount)
+
+{- Below are just musings on adb and laziness, not used for the time being -}
+
+_adbPush :: FilePath -> FilePath -> App ()
+_adbPush src dst = do
+  liftIO $ callProcess "adb" ["push", src, dst]
+
+_adbMkdir :: FilePath -> App ()
+_adbMkdir path = do
+  liftIO $ callProcess "adb" ["shell", "mkdir", "-p", path]
+
+-- | Serves the list of all audio files in the source directory.
+_treeList :: Settings -> IO [FilePath]
+_treeList args = do
+  list <- (lstree $ sSrc args) `fold` FL.list
+  return $ filter (isAudioFile args) list
+
+_treeListLazy :: Settings -> Shell FilePath
+_treeListLazy args =
+  mfilter (isAudioFile args) (lstree (sSrc args))
+
+__treeList :: Settings -> IO [FilePath]
+__treeList args = _treeListLazy args `fold` FL.list
+
+-- | This is the monadic cousin of mfilter. In Shell, mzero drops the element.
+mfilterM :: (MonadPlus m) => (a -> m Bool) -> m a -> m a
+mfilterM p ma = do
+  a <- ma
+  ok <- p a
+  if ok then return a else mzero
+
+-- The introduction of sorting will kill laziness, of course.
+__dirListLazy :: FilePath -> App (Shell FilePath, Shell FilePath)
+__dirListLazy src = do
+  args <- asksSettings id
+  let dirs = mfilterM testdir (ls src)
+      files = mfilter (isAudioFile args) (ls src)
+  return (dirs, files)
+
+data DirEntry = IsDir FilePath | IsFile FilePath
+
+_dirListLazy :: FilePath -> App (Shell DirEntry)
+_dirListLazy src = do
+  args <- asksSettings id
+  let entries = (ls src) >>= classify args
+  return entries
+ where
+  classify :: Settings -> FilePath -> Shell DirEntry
+  classify args p = do
+    ok <- liftIO $ testdir p
+    if ok
+      then return (IsDir p)
+      else
+        if isAudioFile args p
+          then return (IsFile p)
+          else mzero
