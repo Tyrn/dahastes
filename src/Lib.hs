@@ -184,8 +184,8 @@ treeCount args = do
 -- | Serves the list of all audio files in the source directory.
 _treeList :: Settings -> IO [FilePath]
 _treeList args = do
-  lst <- fold (lstree (sSrc args)) FL.list
-  return $ filter (isAudioFile args) lst
+  list <- (lstree $ sSrc args) `fold` FL.list
+  return $ filter (isAudioFile args) list
 
 -- Builds compare function according to options (for dirList only)
 makeCompare :: Settings -> (FilePath -> FilePath -> Ordering)
@@ -202,7 +202,7 @@ makeCompare args =
 _dirList :: Settings -> FilePath -> IO ([FilePath], [FilePath])
 _dirList args src = do
   let cmp = makeCompare args
-  list <- fold (ls src) FL.list
+  list <- (ls src) `fold` FL.list
   (dirs, files) <- partitionM testdir list
   return (sortBy cmp dirs, sortBy cmp $ filter (isAudioFile args) files)
 
@@ -213,7 +213,7 @@ dirList :: FilePath -> App ([FilePath], [FilePath])
 dirList src = do
   args <- asksSettings id
   let cmp = makeCompare args
-  list <- liftIO $ fold (ls src) FL.list
+  list <- liftIO $ (ls src) `fold` FL.list
   (dirs, files) <- (liftIO . partitionM testdir) list
   return
     ( sortBy cmp dirs
