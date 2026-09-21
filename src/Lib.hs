@@ -157,7 +157,7 @@ description =
 fsize :: FilePath -> IO Integer
 fsize path = do
   status <- Posix.getFileStatus path
-  return $ fromIntegral $ Posix.fileSize status
+  pure $ fromIntegral $ Posix.fileSize status
 
 -- On Windows, use System.Directory.getFileSize
 
@@ -183,8 +183,8 @@ treeCount args = do
           if isAudioFile args child
             then do
               size <- fsize child
-              return (cnt + 1, total + size)
-            else return (cnt, total)
+              pure (cnt + 1, total + size)
+            else pure (cnt, total)
 
 -- Builds compare function according to options (for dirList only)
 makeCompare :: Settings -> (FilePath -> FilePath -> Ordering)
@@ -207,7 +207,7 @@ dirList src = do
   let cmp = makeCompare args
   list <- liftIO $ (ls src) `fold` FL.list
   (dirs, files) <- (liftIO . partitionM testdir) list
-  return
+  pure
     ( sortBy cmp dirs
     , sortBy cmp $ filter (isAudioFile args) files
     )
@@ -389,7 +389,7 @@ type Counter = Int -> IO Int
 makeCounter :: IO Counter
 makeCounter = do
   r <- newIORef 0
-  return
+  pure
     ( \idx -> do
         modifyIORef r (+ idx)
         readIORef r
@@ -441,7 +441,7 @@ setTagsToCopy' args trackNum file
         titleSetter (mkTitle $ tt $ T.unpack album)
           <> albumSetter (mkAlbum album)
           <> track
-  | otherwise = return ()
+  | otherwise = pure ()
  where
   st = setTags file Nothing
   tt = shapeTitle args trackNum (baseName file)
@@ -639,7 +639,7 @@ _adbMkdir path = do
 _treeList :: Settings -> IO [FilePath]
 _treeList args = do
   list <- (lstree $ sSrc args) `fold` FL.list
-  return $ filter (isAudioFile args) list
+  pure $ filter (isAudioFile args) list
 
 _treeListLazy :: Settings -> Shell FilePath
 _treeListLazy args =
@@ -653,7 +653,7 @@ mfilterM :: (MonadPlus m) => (a -> m Bool) -> m a -> m a
 mfilterM p ma = do
   a <- ma
   ok <- p a
-  if ok then return a else mzero
+  if ok then pure a else mzero
 
 -- The introduction of sorting will kill laziness, of course.
 __dirListLazy :: FilePath -> App (Shell FilePath, Shell FilePath)
@@ -661,7 +661,7 @@ __dirListLazy src = do
   args <- asksSettings id
   let dirs = mfilterM testdir (ls src)
       files = mfilter (isAudioFile args) (ls src)
-  return (dirs, files)
+  pure (dirs, files)
 
 data DirEntry = IsDir FilePath | IsFile FilePath
 
@@ -669,14 +669,14 @@ _dirListLazy :: FilePath -> App (Shell DirEntry)
 _dirListLazy src = do
   args <- asksSettings id
   let entries = (ls src) >>= classify args
-  return entries
+  pure entries
  where
   classify :: Settings -> FilePath -> Shell DirEntry
   classify args p = do
     ok <- liftIO $ testdir p
     if ok
-      then return (IsDir p)
+      then pure (IsDir p)
       else
         if isAudioFile args p
-          then return (IsFile p)
+          then pure (IsFile p)
           else mzero

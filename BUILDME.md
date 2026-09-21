@@ -51,3 +51,9 @@ ldd ~/.local/bin/dahastes | grep libtag
 ```
 
 Should be something like `libtag_c.so.2` for `taglib 2.x`
+
+## TODO
+
+- Decide if checking the audio files by extensions is enough.
+  In practice, the broken files are rare and won't go unnoticed
+  as soon as the tag setting is attempted.
