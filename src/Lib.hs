@@ -279,8 +279,10 @@ copyFile stepDown srcFile = do
   unless (sDryrun args) $ ship srcFile dst n
   putCopy n srcFile dst
 
-ordered :: Bool -> App () -> App () -> App ()
-ordered swap a b = if swap then b >> a else a >> b
+ordered :: (Monad m) => Bool -> m () -> m () -> m ()
+ordered swap a b
+  | swap = b >> a
+  | otherwise = a >> b
 
 -- | Walks the source tree, recreates it at destination according to options.
 traverseTheTree :: FilePath -> FilePath -> App ()
@@ -294,7 +296,10 @@ traverseTheTree srcDir stepDown = do
         when (sTreeDst args && not (sDryrun args)) $ mkdir (dstRoot </> step)
         traverseTheTree srcdir step
 
-  ordered (sReverse args) (mapM_ walk dirs) (mapM_ (copyFile stepDown) files)
+      walkDirs = mapM_ walk dirs
+      copyFiles = mapM_ (copyFile stepDown) files
+
+  ordered (sReverse args) walkDirs copyFiles
 
 -- | Fires the files into the already existing destination directory.
 traverseAlbum :: FilePath -> App ()
