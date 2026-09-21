@@ -588,14 +588,27 @@ humanFine bytes
     | n < b = 0
     | otherwise = 1 + integerLogBase b (n `div` b)
 
+-- | Root directory image, with a smart arrowhead.
+rdImage :: Bool -> App (String)
+rdImage isOnTop = do
+  totw <- asks ctxFileCountWidth
+  rootDir <- asks ctxDstRoot
+  let arrowHead = replicate (totw * 2 + 1) '>'
+      sep = [pathSeparator]
+      rd = rootDir <> sep
+      top = [rd, "  ", arrowHead]
+      dst = if isOnTop then concat top else (concat . reverse) top
+  pure dst
+
 -- | Prints the header of the output to the console.
 putHeader :: App ()
 putHeader = do
   args <- asksSettings id
+  rd <- rdImage True
 
   if sVerbose args || sDryrun args
-    then liftIO $ putStr ""
-    else liftIO $ putStr "Start "
+    then liftIO $ putStr (rd <> "\n\n")
+    else liftIO $ putStr (rd <> "\n" <> "Start ")
 
 -- | Prints a single file copy info to the console.
 putCopy :: Int -> FilePath -> FilePath -> App ()
@@ -624,19 +637,17 @@ putFooter :: App ()
 putFooter = do
   args <- asksSettings id
   total <- asks ctxFileCount
-  totw <- asks ctxFileCountWidth
   byteCount <- asks ctxByteCount
-  dstRoot <- asks ctxDstRoot
+  rd <- rdImage False
 
   let bcount = humanFine byteCount
-      dstp = replicate (totw * 2 + 1) '>' <> "  " <> dstRoot <> [pathSeparator]
 
   if sVerbose args || sDryrun args
     then
       if sDryrun args
-        then liftIO $ putStr (printf "\n%s\n\nTotal of %d file(s) good to copy; Volume: %s\n" dstp total bcount)
-        else liftIO $ putStr (printf "\n%s\n\nTotal of %d file(s) copied; Volume: %s\n" dstp total bcount)
-    else liftIO $ putStr (printf " Done(%d); Volume: %s;\n%s\n" total bcount dstp)
+        then liftIO $ putStr (printf "\n%s\n\nTotal of %d file(s) good to copy; Volume: %s\n" rd total bcount)
+        else liftIO $ putStr (printf "\n%s\n\nTotal of %d file(s) copied; Volume: %s\n" rd total bcount)
+    else liftIO $ putStr (printf " Done(%d); Volume: %s;\n%s\n" total bcount rd)
 
 {- Below are just musings on adb and laziness, not used for the time being -}
 
