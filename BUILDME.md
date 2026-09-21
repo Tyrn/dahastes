@@ -13,7 +13,8 @@ Once generated with [template-haskell](https://github.com/jonascarpay/template-h
   - [joanllenas](https://github.com/joanllenas/haskell-exercises)
   - [BoeingX](https://github.com/BoeingX/haskell-programming-from-first-principles)
   - [johnchandlerburnham](https://github.com/johnchandlerburnham/hpfp)
-  - [glebec](https://github.com/glebec/haskell-programming-allen-moronuki)
+  - [glebec](https://github.com/glebec/haskell-programming-allen-moronuki);
+    .lhs files used
   - [dwayne](https://github.com/dwayne/haskell-programming)
   - [parry84](https://github.com/parry84/haskell-book)
   - [pushcx](https://github.com/pushcx/hpffp-resources)
