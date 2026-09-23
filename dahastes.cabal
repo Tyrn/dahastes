@@ -37,7 +37,6 @@ library
   exposed-modules: Lib, Initials, PathUtils
   other-modules:   Paths_dahastes
   build-depends:
-    , containers
     , turtle
     , mtl
     , process
@@ -46,19 +45,13 @@ library
     , extra
     , filepath
     , unix-compat
-    , directory-ospath-streaming
     , doctest
-    , regex-base
     , regex-tdfa
-    , tasty-hunit
     , text
     , bytestring
-    , split
     , directory
-    , filemanip
     , foldl
     , htaglib
-    , system-filepath
 
 executable dahastes
   import:         common-options

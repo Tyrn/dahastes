@@ -26,6 +26,9 @@ Once generated with [template-haskell](https://github.com/jonascarpay/template-h
 
 - [Install tools](https://github.com/Tyrn/dotfiles/blob/main/messy-notes/Haskell.md) (GHCup)
 
+- [treeCount](https://github.com/Tyrn/dahastes/commit/a3e3d6a69cc61a16d590e1e018d20df3d59b6c52):
+  walking the file tree via `directory-ospath-streaming`
+
 ## Howto
 
 - Build and install (as of 2026-08-11 GHC 9.10.3)
