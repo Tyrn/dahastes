@@ -38,6 +38,12 @@ cabal build
 cabal install --installdir=$HOME/.local/bin --overwrite-policy=always
 ```
 
+-- Build and watch the docs
+
+```
+cabal haddock --open
+```
+
 - [Calligraphy](https://github.com/jonascarpay/calligraphy),
   [Notes](https://github.com/Tyrn/dotfiles/blob/main/messy-notes/Haskell.md)
 
