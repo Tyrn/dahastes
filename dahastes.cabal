@@ -37,6 +37,7 @@ library
   exposed-modules: Lib, Initials, PathUtils
   other-modules:   Paths_dahastes
   build-depends:
+    , containers
     , turtle
     , mtl
     , process
