@@ -5,12 +5,11 @@
 
 Once generated with [template-haskell](https://github.com/jonascarpay/template-haskell); no longer.
 
-## Books
+## References
 
 - A&M, notes and exercises
 
   - [mvaldesdeleon](https://github.com/mvaldesdeleon/haskell-book)
-  - [joanllenas](https://github.com/joanllenas/haskell-exercises)
   - [BoeingX](https://github.com/BoeingX/haskell-programming-from-first-principles)
   - [johnchandlerburnham](https://github.com/johnchandlerburnham/hpfp)
   - [glebec](https://github.com/glebec/haskell-programming-allen-moronuki);
@@ -21,6 +20,11 @@ Once generated with [template-haskell](https://github.com/jonascarpay/template-h
   - [gvolpe](https://github.com/gvolpe/haskell-book-exercises)
   - [scarvalhojr](https://github.com/scarvalhojr/haskellbook)
   - [xnning](https://github.com/xnning/haskell-programming-from-first-principles)
+
+- Miscellany
+  - [joanllenas](https://github.com/joanllenas/haskell-exercises),
+    fork from [opqdonut](https://github.com/opqdonut/haskell-exercises);
+    QuickCheck used
 
 ## Notes
 
