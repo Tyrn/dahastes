@@ -279,10 +279,10 @@ copyFile stepDown srcFile = do
   unless (sDryrun args) $ ship srcFile dst n
   putCopy n srcFile dst
 
-ordered :: (Monad m) => Bool -> m () -> m () -> m ()
+ordered :: (Applicative f) => Bool -> f () -> f () -> f ()
 ordered swap a b
-  | swap = b >> a
-  | otherwise = a >> b
+  | swap = b *> a
+  | otherwise = a *> b
 
 -- | Walks the source tree, recreates it at destination according to options.
 traverseTheTree :: FilePath -> FilePath -> App ()
