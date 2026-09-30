@@ -20,6 +20,7 @@ import Control.Monad.Catch (onException)
 import Control.Monad.Extra
 import Control.Monad.Reader
 import Data.Char (toUpper)
+import Data.Foldable (traverse_)
 import Data.IORef
 import Data.List (sortBy)
 import Data.Maybe
@@ -296,8 +297,8 @@ traverseTheTree srcDir stepDown = do
         when (sTreeDst args && not (sDryrun args)) $ mkdir (dstRoot </> step)
         traverseTheTree srcdir step
 
-      walkDirs = mapM_ walk dirs
-      copyFiles = mapM_ (copyFile stepDown) files
+      walkDirs = traverse_ walk dirs
+      copyFiles = traverse_ (copyFile stepDown) files
 
   ordered (sReverse args) walkDirs copyFiles
 
