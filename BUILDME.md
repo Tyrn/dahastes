@@ -10,7 +10,8 @@ Once generated with [template-haskell](https://github.com/jonascarpay/template-h
 - A&M, notes and exercises
 
   - [mvaldesdeleon](https://github.com/mvaldesdeleon/haskell-book)
-  - [BoeingX](https://github.com/BoeingX/haskell-programming-from-first-principles)
+  - [fork](https://github.com/Tyrn/haskell-programming-from-first-principles) from
+    [BoeingX](https://github.com/BoeingX/haskell-programming-from-first-principles)
   - [johnchandlerburnham](https://github.com/johnchandlerburnham/hpfp)
   - [glebec](https://github.com/glebec/haskell-programming-allen-moronuki);
     .lhs files used
@@ -28,7 +29,7 @@ Once generated with [template-haskell](https://github.com/jonascarpay/template-h
 
 ## Notes
 
-- [Install tools](https://github.com/Tyrn/dotfiles/blob/main/messy-notes/Haskell.md) (GHCup)
+- [Install tools](https://github.com/Tyrn/dotfiles/blob/main/messy-notes/Haskell/Haskell.md) (GHCup)
 
 - [treeCount](https://github.com/Tyrn/dahastes/commit/a3e3d6a69cc61a16d590e1e018d20df3d59b6c52):
   walking the file tree via `directory-ospath-streaming`
