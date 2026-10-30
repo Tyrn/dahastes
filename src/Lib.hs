@@ -152,7 +152,15 @@ description =
   optionally. The writing process is strictly sequential: either starting with the number
   one file, or in the reversed order. This can be important for some mobile devices.
   #{hi} Really useful options. #{su} Suspicious media.
-  v#{showVersion version}|]
+  v#{showVersion version}
+
+  Examples; SRC as a directory:
+
+  robinson-crusoe $ dahastes -va 'Daniel "Goldeneye" Defoe' -m 'Robinson Crusoe' . /run/media/player
+
+  SRC as a single file:
+
+  library $ dahastes -va 'Vladimir Nabokov' -u 'Ada' ada.ogg .|]
 
 -- | Gets file size in bytes.
 fsize :: FilePath -> IO Integer
@@ -326,7 +334,46 @@ copyAlbum :: App ()
 copyAlbum = do
   args <- asksSettings id
 
+  dst <- realpath (sDst args)
+
+  unlessM (testdir dst) $ do
+    liftIO $ printf "Destination directory \"%s\" does not exist\n" dst
+    exit (ExitFailure 1)
+
   src <- realpath (sSrc args)
+
+  let srcName = basename src -- Sometimes src can be a file: beware!
+      albumNum = case sAlbumNum args of
+        Just num -> zeroPad num 2 <> "-"
+        Nothing -> ""
+      baseDst = case sUnifiedName args of
+        Just uname ->
+          albumNum
+            <> artistGroomedToJoin args True
+            <> T.unpack uname
+        Nothing -> albumNum <> srcName
+      execDst = dst </> if sDropDst args then "" else baseDst
+
+  isFileSrc <- liftIO $ doesFileExist src
+
+  -- A very special case of a single file to copy.
+  when (isFileSrc) $ do
+    when (not $ isAudioFile args src) $ do
+      liftIO $ printf "\"%s\" isn't an audio file\n" src
+      exit (ExitFailure 1)
+
+    size <- liftIO $ fsize src
+    let
+      -- Deferred Ctx initialization
+      extendCtx ctx =
+        ctx
+          { ctxFileCount = 1
+          , ctxByteCount = size
+          , ctxFileCountWidth = 1
+          , ctxDstRoot = execDst
+          }
+    local extendCtx $ doAlbum src
+    exit ExitSuccess
 
   unlessM (testdir src) $ do
     liftIO $ printf "Source directory \"%s\" does not exist\n" src
@@ -343,28 +390,11 @@ copyAlbum = do
     liftIO $ printf "Files: %d; Volume: %s\n" fileCount (humanFine byteCount)
     exit ExitSuccess
 
-  dst <- realpath (sDst args)
-
-  unlessM (testdir dst) $ do
-    liftIO $ printf "Destination directory \"%s\" does not exist\n" dst
-    exit (ExitFailure 1)
-
   when (dst `isRelativeTo` src) $ do
     liftIO $ printf "Target directory \"%s\"\n" dst
     liftIO $ printf "is inside source \"%s\"\n" src
     exit (ExitFailure 1)
 
-  let srcName = basename src -- src must be a directory.
-      albumNum = case sAlbumNum args of
-        Just num -> zeroPad num 2 <> "-"
-        Nothing -> ""
-      baseDst = case sUnifiedName args of
-        Just uname ->
-          albumNum
-            <> artistGroomedToJoin args True
-            <> T.unpack uname
-        Nothing -> albumNum <> srcName
-      execDst = dst </> if sDropDst args then "" else baseDst
   let
     -- Deferred Ctx initialization
     extendCtx ctx =
@@ -375,29 +405,29 @@ copyAlbum = do
         , ctxDstRoot = execDst
         }
   local extendCtx $ doAlbum src
+ where
+  doAlbum :: FilePath -> App ()
+  doAlbum src = do
+    args <- asksSettings id
+    execDst <- asks ctxDstRoot
 
-doAlbum :: FilePath -> App ()
-doAlbum src = do
-  args <- asksSettings id
-  execDst <- asks ctxDstRoot
-
-  if sDropDst args
-    then traverseAlbum src
-    else do
-      exists <- testdir execDst
-      if exists
-        then
-          if sOverwrite args
-            then do
-              unless (sDryrun args) $ do
-                rmtree execDst
-                mkdir execDst
-              traverseAlbum src
-            else
-              liftIO $ printf "Destination directory \"%s\" already exists\n" execDst
-        else do
-          unless (sDryrun args) $ mkdir execDst
-          traverseAlbum src
+    if sDropDst args
+      then traverseAlbum src
+      else do
+        exists <- testdir execDst
+        if exists
+          then
+            if sOverwrite args
+              then do
+                unless (sDryrun args) $ do
+                  rmtree execDst
+                  mkdir execDst
+                traverseAlbum src
+              else
+                liftIO $ printf "Destination directory \"%s\" already exists\n" execDst
+          else do
+            unless (sDryrun args) $ mkdir execDst
+            traverseAlbum src
 
 {- Counter, mostly global -}
 
