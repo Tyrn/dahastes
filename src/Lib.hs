@@ -374,24 +374,30 @@ copyAlbum = do
         , ctxFileCountWidth = fileCountWidth
         , ctxDstRoot = execDst
         }
-  local extendCtx $ do
-    if sDropDst args
-      then traverseAlbum src
-      else do
-        exists <- testdir execDst
-        if exists
-          then
-            if sOverwrite args
-              then do
-                unless (sDryrun args) $ do
-                  rmtree execDst
-                  mkdir execDst
-                traverseAlbum src
-              else
-                liftIO $ printf "Destination directory \"%s\" already exists\n" execDst
-          else do
-            unless (sDryrun args) $ mkdir execDst
-            traverseAlbum src
+  local extendCtx $ doAlbum src
+
+doAlbum :: FilePath -> App ()
+doAlbum src = do
+  args <- asksSettings id
+  execDst <- asks ctxDstRoot
+
+  if sDropDst args
+    then traverseAlbum src
+    else do
+      exists <- testdir execDst
+      if exists
+        then
+          if sOverwrite args
+            then do
+              unless (sDryrun args) $ do
+                rmtree execDst
+                mkdir execDst
+              traverseAlbum src
+            else
+              liftIO $ printf "Destination directory \"%s\" already exists\n" execDst
+        else do
+          unless (sDryrun args) $ mkdir execDst
+          traverseAlbum src
 
 {- Counter, mostly global -}
 
