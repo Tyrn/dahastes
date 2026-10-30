@@ -32,7 +32,7 @@ import Initials
 import PathUtils (isRelativeTo)
 import Paths_dahastes (version)
 import Sound.HTagLib
-import System.Directory (doesDirectoryExist, listDirectory, removeFile)
+import System.Directory (doesDirectoryExist, doesFileExist, listDirectory, removeFile)
 import System.FilePath (makeRelative, pathSeparator)
 import System.IO hiding (stderr, stdout)
 import System.IO.Error (catchIOError)
@@ -201,17 +201,29 @@ makeCompare args =
 
 {- | Serves the list of directories and the list of audio files
 of a given parent directory (immediate offspring).
+
+If @src@ is itself a regular file, returns an empty directory list
+and a singleton list containing that file, provided it is an audio
+file; otherwise returns two empty lists.
 -}
 dirList :: FilePath -> App ([FilePath], [FilePath])
 dirList src = do
   args <- asksSettings id
-  let cmp = makeCompare args
-  list <- liftIO $ (ls src) `fold` FL.list
-  (dirs, files) <- (liftIO . partitionM testdir) list
-  pure
-    ( sortBy cmp dirs
-    , sortBy cmp $ filter (isAudioFile args) files
-    )
+  isFile <- liftIO $ doesFileExist src
+  if isFile
+    then
+      pure
+        ( []
+        , if isAudioFile args src then [src] else []
+        )
+    else do
+      let cmp = makeCompare args
+      list <- liftIO $ (ls src) `fold` FL.list
+      (dirs, files) <- (liftIO . partitionM testdir) list
+      pure
+        ( sortBy cmp dirs
+        , sortBy cmp $ filter (isAudioFile args) files
+        )
 
 -- | Makes a file name prefix or suffix out of the Artist Tag, if there is any.
 artistGroomedToJoin :: Settings -> Bool -> String
