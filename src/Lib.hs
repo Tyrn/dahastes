@@ -277,8 +277,13 @@ copyFile stepDown srcFile = do
       dst = shapeDst args dstRoot total totw n stepDown srcFile
       ship = if True then shipViaTemp else shipDirect
 
-  unless (sDryrun args) $ ship srcFile dst n
-  putCopy n srcFile dst
+  exists <- testfile dst
+  if exists
+    then
+      liftIO $ printf "File \"%s\" already copied. Review your options.\n" dst
+    else do
+      unless (sDryrun args) $ ship srcFile dst n
+      putCopy n srcFile dst
 
 -- | Makes destination file path.
 shapeDst :: Settings -> FilePath -> Int -> Int -> Int -> FilePath -> FilePath -> FilePath
