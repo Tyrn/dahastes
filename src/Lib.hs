@@ -121,10 +121,10 @@ settingsP :: Parser Settings
 settingsP =
   Settings
     <$> switch "verbose" 'v' [i|#{hi} Unless verbose, just progress bar is shown|]
-    <*> switch "drop-tracknumber" 'd' "Do not set track numbers"
+    <*> switch "drop-tracknumber" 'd' "Do not set the track number tag"
     <*> switch "strip-decorations" 's' "Strip file and directory name decorations"
     <*> switch "file-title" 'f' "Use file name for title tag"
-    <*> switch "file-title-num" 'F' "Use numbered file name for title tag"
+    <*> switch "file-title-num" 'F' "Use numbered file name for the title tag"
     <*> switch "sort-lex" 'x' "Sort files lexicographically"
     <*> switch "tree-dst" 't' "Retain the tree structure of the source album at destination"
     <*> switch "drop-dst" 'p' "Do not create destination directory"
@@ -160,7 +160,7 @@ description =
 
   SRC as a single file:
 
-  library $ dahastes -va 'Vladimir Nabokov' -u 'Ada' ada.ogg .|]
+  library $ dahastes -vspa 'Vladimir Nabokov' -u Ada ada.ogg .|]
 
 -- | Gets file size in bytes.
 fsize :: FilePath -> IO Integer
@@ -242,26 +242,6 @@ artistGroomedToJoin args asPrefix
  where
   name = maybe "" T.unpack (sArtistTag args)
 
--- | Makes destination file path.
-shapeDst :: Settings -> FilePath -> Int -> Int -> FilePath -> FilePath -> FilePath
-shapeDst args dstRoot totw n dstStep srcFile =
-  let prefx =
-        if sStripDecorations args && isNothing (sUnifiedName args)
-          then ""
-          else
-            zeroPad n totw
-              <> "-"
-              <> if sPrependSubdirName args && length dstStep > 0
-                then "[" <> concatMap (\c -> if c == pathSeparator then "][" else [c]) dstStep <> "]-"
-                else ""
-      name = case sUnifiedName args of
-        Just uName -> T.unpack uName <> artistGroomedToJoin args False
-        Nothing -> baseName srcFile
-      ext = case extension srcFile of
-        Just extn -> "." <> extn
-        Nothing -> ""
-   in dstRoot </> (if sTreeDst args then dstStep else "") </> (prefx <> name <> ext)
-
 {- | Stage a tagged copy in the system temp directory, then copy that
 to the destination as a single plain write. The destination is never
 mutated after it appears.
@@ -294,11 +274,31 @@ copyFile stepDown srcFile = do
   dstRoot <- asks ctxDstRoot
 
   let n = if sReverse args then total - next + 1 else next
-      dst = shapeDst args dstRoot totw n stepDown srcFile
+      dst = shapeDst args dstRoot total totw n stepDown srcFile
       ship = if True then shipViaTemp else shipDirect
 
   unless (sDryrun args) $ ship srcFile dst n
   putCopy n srcFile dst
+
+-- | Makes destination file path.
+shapeDst :: Settings -> FilePath -> Int -> Int -> Int -> FilePath -> FilePath -> FilePath
+shapeDst args dstRoot total totw n dstStep srcFile =
+  let prefx =
+        if sStripDecorations args && (isNothing (sUnifiedName args) || total == 1)
+          then ""
+          else
+            zeroPad n totw
+              <> "-"
+              <> if sPrependSubdirName args && length dstStep > 0
+                then "[" <> concatMap (\c -> if c == pathSeparator then "][" else [c]) dstStep <> "]-"
+                else ""
+      name = case sUnifiedName args of
+        Just uName -> T.unpack uName <> artistGroomedToJoin args False
+        Nothing -> baseName srcFile
+      ext = case extension srcFile of
+        Just extn -> "." <> extn
+        Nothing -> ""
+   in dstRoot </> (if sTreeDst args then dstStep else "") </> (prefx <> name <> ext)
 
 ordered :: (Applicative f) => Bool -> f () -> f () -> f ()
 ordered swap a b
